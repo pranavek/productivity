@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoSCoW Prioritizer - Strategize Your Workload</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="bg-gradient"></div>
+    <div class="blob" style="background: var(--must-color); opacity: 0.05;"></div>
+
+    <div class="container" id="app" v-cloak>
+        <header>
+            <a href="index.html"
+                style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem; margin-bottom: 1rem; display: inline-block;">←
+                Back to Suite</a>
+            <h1>MoSCoW Prioritizer</h1>
+            <p class="subtitle">Categorize tasks into Must, Should, Could, and Won't have.</p>
+
+            <div class="must-ratio-container" style="max-width: 400px; margin: 1.5rem auto 0;">
+                <div class="must-ratio-label">
+                    <span>Must-Have Ratio</span>
+                    <span>{{ mustRatio }}%</span>
+                </div>
+                <div class="must-ratio-bar">
+                    <div class="must-ratio-fill" :style="{ width: mustRatio + '%' }"
+                        :class="{ warning: mustRatio > 60 }"></div>
+                </div>
+            </div>
+        </header>
+
+        <section class="input-section">
+            <div class="input-group">
+                <input type="text" v-model="newTaskText" @keyup.enter="addTask" placeholder="What needs to be done?"
+                    autocomplete="off">
+            </div>
+            <div class="select-group">
+                <select v-model="newTaskPriority">
+                    <option value="must">Must Have (Critical)</option>
+                    <option value="should">Should Have (Important)</option>
+                    <option value="could">Could Have (Desirable)</option>
+                    <option value="wont">Won't Have (Not now)</option>
+                </select>
+            </div>
+            <button @click="addTask" class="primary-btn" style="background: var(--must-color)">
+                <span>Add Task</span>
+            </button>
+        </section>
+
+        <main class="matrix-container" style="grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;">
+            <!-- Quadrants -->
+            <div v-for="cat in categories" :key="cat.id" :class="['quadrant', cat.id]">
+                <div class="quadrant-header">
+                    <span class="quadrant-title">{{ cat.title }}</span>
+                    <span class="quadrant-tag">{{ cat.label }}</span>
+                </div>
+                <div class="task-list">
+                    <!-- Uncompleted Tasks -->
+                    <div v-for="task in getTasks(cat.id, false)" :key="task.id" class="task-item">
+                        <input type="checkbox" class="task-checkbox" v-model="task.completed"
+                            @change="updateTask(task)">
+                        <span class="task-text">{{ task.text }}</span>
+                        <button class="delete-task" @click="deleteTask(task.id)" title="Delete Task">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path
+                                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                </path>
+                                <line x1="10" y1="11" x2="10" y2="17"></line>
+                                <line x1="14" y1="11" x2="14" y2="17"></line>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Completed Tasks Separator -->
+                    <div v-if="hasCompleted(cat.id)" class="completed-separator">Completed</div>
+
+                    <!-- Completed Tasks -->
+                    <div v-for="task in getTasks(cat.id, true)" :key="task.id" class="task-item completed">
+                        <input type="checkbox" class="task-checkbox" v-model="task.completed"
+                            @change="updateTask(task)">
+                        <span class="task-text">{{ task.text }}</span>
+                        <button class="delete-task" @click="deleteTask(task.id)" title="Delete Task">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path
+                                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                </path>
+                                <line x1="10" y1="11" x2="10" y2="17"></line>
+                                <line x1="14" y1="11" x2="14" y2="17"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <div class="tip-box">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <p><strong>Pro Tip:</strong> Keep your "Must Have" tasks below <strong>60%</strong> of total effort to
+                ensure project feasibility.</p>
+        </div>
+
+        <div class="controls">
+            <button @click="showResetModal = true" class="reset-btn">Reset MoSCoW Data</button>
+        </div>
+
+        <!-- Modal for confirmation -->
+        <div class="modal-overlay" :style="{ display: showResetModal ? 'flex' : 'none' }">
+            <div class="modal">
+                <h3>Reset MoSCoW Data?</h3>
+                <p style="margin-top: 1rem; color: var(--text-muted);">This will permanently delete all tasks in the
+                    prioritizer. Eisenhower data will not be affected.</p>
+                <div class="modal-actions">
+                    <button @click="showResetModal = false" class="secondary-btn">Cancel</button>
+                    <button @click="resetData" class="reset-btn" style="padding: 0.5rem 1rem;">Yes, Reset</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/moscow-vue.js"></script>
+</body>
+
+</html>

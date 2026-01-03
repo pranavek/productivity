@@ -4,19 +4,19 @@ createApp({
     setup() {
         const tasks = ref([]);
         const newTaskText = ref('');
-        const newTaskQuadrant = ref('q1');
+        const newTaskPriority = ref('must');
         const showResetModal = ref(false);
 
-        const quadrants = [
-            { id: 'q1', title: 'DO', label: 'Urgent & Important' },
-            { id: 'q2', title: 'SCHEDULE', label: 'Not Urgent & Important' },
-            { id: 'q3', title: 'DELEGATE', label: 'Urgent & Not Important' },
-            { id: 'q4', title: 'ELIMINATE', label: 'Not Urgent & Not Important' }
+        const categories = [
+            { id: 'must', title: 'Must Have', label: 'Critical for success' },
+            { id: 'should', title: 'Should Have', label: 'Important but not vital' },
+            { id: 'could', title: 'Could Have', label: 'Desirable but not necessary' },
+            { id: 'wont', title: "Won't Have", label: 'Not for now' }
         ];
 
         const loadTasks = async () => {
             const allTasks = await TaskDB.getAll();
-            tasks.value = allTasks.filter(t => t.type === 'eisenhower' || !t.type);
+            tasks.value = allTasks.filter(t => t.type === 'moscow');
         };
 
         const addTask = async () => {
@@ -24,9 +24,9 @@ createApp({
 
             const task = {
                 text: newTaskText.value.trim(),
-                quadrant: newTaskQuadrant.value,
+                priority: newTaskPriority.value,
                 completed: false,
-                type: 'eisenhower',
+                type: 'moscow',
                 createdAt: Date.now()
             };
 
@@ -36,7 +36,6 @@ createApp({
         };
 
         const updateTask = async (task) => {
-            // Task is already reactive due to v-model, but we need to persist it
             await TaskDB.update(JSON.parse(JSON.stringify(task)));
             await loadTasks();
         };
@@ -47,35 +46,45 @@ createApp({
         };
 
         const resetData = async () => {
-            await TaskDB.clearAll();
+            // Only clear moscow tasks
+            for (const task of tasks.value) {
+                await TaskDB.delete(task.id);
+            }
             showResetModal.value = false;
             await loadTasks();
         };
 
-        const getTasks = (quadrantId, completed) => {
+        const getTasks = (priorityId, completed) => {
             return tasks.value
-                .filter(t => t.quadrant === quadrantId && t.completed === completed)
+                .filter(t => t.priority === priorityId && t.completed === completed)
                 .sort((a, b) => b.createdAt - a.createdAt);
         };
 
-        const hasCompleted = (quadrantId) => {
-            return tasks.value.some(t => t.quadrant === quadrantId && t.completed);
+        const hasCompleted = (priorityId) => {
+            return tasks.value.some(t => t.priority === priorityId && t.completed);
         };
+
+        const mustRatio = computed(() => {
+            if (tasks.value.length === 0) return 0;
+            const mustCount = tasks.value.filter(t => t.priority === 'must').length;
+            return Math.round((mustCount / tasks.value.length) * 100);
+        });
 
         onMounted(loadTasks);
 
         return {
             tasks,
             newTaskText,
-            newTaskQuadrant,
+            newTaskPriority,
             showResetModal,
-            quadrants,
+            categories,
             addTask,
             updateTask,
             deleteTask,
             resetData,
             getTasks,
-            hasCompleted
+            hasCompleted,
+            mustRatio
         };
     }
 }).mount('#app');
