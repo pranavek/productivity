@@ -189,6 +189,14 @@ button.secondary-btn:hover {
     padding-top: 1rem;
 }
 
+.columns-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    min-height: 600px;
+    animation: fadeIn 1s ease-out 0.2s both;
+}
+
 .axis-label-row {
     grid-column: 2 / span 2;
     display: flex;
@@ -588,7 +596,9 @@ button.secondary-btn:hover {
 
 /* Responsive */
 @media (max-width: 992px) {
-    .matrix-container {
+
+    .matrix-container,
+    .columns-container {
         grid-template-columns: 1fr;
         grid-template-rows: auto;
         display: flex;
