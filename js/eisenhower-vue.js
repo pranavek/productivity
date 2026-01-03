@@ -15,21 +15,7 @@ createApp({
         ];
 
         const loadTasks = async () => {
-            const allTasks = await TaskDB.getAll();
-            if (allTasks.length === 0) {
-                const samples = [
-                    { text: 'Finish project presentation', quadrant: 'q1', completed: false, createdAt: Date.now() },
-                    { text: 'Gym session', quadrant: 'q2', completed: false, createdAt: Date.now() - 1000 },
-                    { text: 'Reply to non-urgent emails', quadrant: 'q3', completed: false, createdAt: Date.now() - 2000 },
-                    { text: 'Scroll social media', quadrant: 'q4', completed: true, createdAt: Date.now() - 3000 }
-                ];
-                for (const s of samples) {
-                    await TaskDB.add(s);
-                }
-                tasks.value = await TaskDB.getAll();
-            } else {
-                tasks.value = allTasks;
-            }
+            tasks.value = await TaskDB.getAll();
         };
 
         const addTask = async () => {
