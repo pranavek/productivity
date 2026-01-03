@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eisenhower Matrix - Prioritize Tasks</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="bg-gradient"></div>
+    <div class="blob"></div>
+
+    <div class="container">
+        <header>
+            <a href="index.html"
+                style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem; margin-bottom: 1rem; display: inline-block;">←
+                Back to Suite</a>
+            <h1>Eisenhower Matrix</h1>
+            <p class="subtitle">Focus on what's important, not just what's urgent.</p>
+        </header>
+
+        <section class="input-section">
+            <div class="input-group">
+                <input type="text" id="taskInput" placeholder="What needs to be done?" autocomplete="off">
+            </div>
+            <div class="select-group">
+                <select id="quadrantSelect">
+                    <option value="q1">Urgent & Important (Do)</option>
+                    <option value="q2">Not Urgent & Important (Schedule)</option>
+                    <option value="q3">Urgent & Not Important (Delegate)</option>
+                    <option value="q4">Not Urgent & Not Important (Eliminate)</option>
+                </select>
+            </div>
+            <button id="addTaskBtn" class="primary-btn">
+                <span>Add Task</span>
+            </button>
+        </section>
+
+        <main class="matrix-container">
+            <!-- X Axis Labels -->
+            <div class="axis-label-row">
+                <div>Urgent</div>
+                <div>Not Urgent</div>
+            </div>
+
+            <!-- Y Axis Labels -->
+            <div class="axis-label-col">
+                <div>Important</div>
+                <div>Not Important</div>
+            </div>
+
+            <!-- Quadrant 1: Do -->
+            <div class="quadrant q1" id="q1">
+                <div class="quadrant-header">
+                    <span class="quadrant-title">DO</span>
+                    <span class="quadrant-tag">Urgent & Important</span>
+                </div>
+                <div class="task-list" id="list-q1"></div>
+            </div>
+
+            <!-- Quadrant 2: Schedule -->
+            <div class="quadrant q2" id="q2">
+                <div class="quadrant-header">
+                    <span class="quadrant-title">SCHEDULE</span>
+                    <span class="quadrant-tag">Not Urgent & Important</span>
+                </div>
+                <div class="task-list" id="list-q2"></div>
+            </div>
+
+            <!-- Quadrant 3: Delegate -->
+            <div class="quadrant q3" id="q3">
+                <div class="quadrant-header">
+                    <span class="quadrant-title">DELEGATE</span>
+                    <span class="quadrant-tag">Urgent & Not Important</span>
+                </div>
+                <div class="task-list" id="list-q3"></div>
+            </div>
+
+            <!-- Quadrant 4: Eliminate -->
+            <div class="quadrant q4" id="q4">
+                <div class="quadrant-header">
+                    <span class="quadrant-title">ELIMINATE</span>
+                    <span class="quadrant-tag">Not Urgent & Not Important</span>
+                </div>
+                <div class="task-list" id="list-q4"></div>
+            </div>
+        </main>
+
+        <div class="controls">
+            <button id="openResetModal" class="reset-btn">Reset All Data</button>
+        </div>
+    </div>
+
+    <!-- Modal for confirmation -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <h3>Reset All Data?</h3>
+            <p style="margin-top: 1rem; color: var(--text-muted);">This will permanently delete all tasks in the matrix.
+                This action cannot be undone.</p>
+            <div class="modal-actions">
+                <button id="cancelReset" class="secondary-btn">Cancel</button>
+                <button id="confirmReset" class="reset-btn" style="padding: 0.5rem 1rem;">Yes, Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/db.js"></script>
+    <script src="js/eisenhower.js"></script>
+</body>
+
+</html>
