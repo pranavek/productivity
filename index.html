@@ -1,9 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <script>
-        window.location.href = "eisenhower.html";
-    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Productivity Hub - Master Your Time</title>
@@ -18,6 +16,7 @@
             gap: 2rem;
             margin-top: 3rem;
         }
+
         .tool-card {
             background: var(--glass-bg);
             backdrop-filter: blur(12px);
@@ -33,11 +32,13 @@
             position: relative;
             overflow: hidden;
         }
+
         .tool-card:hover {
             transform: translateY(-10px);
             border-color: rgba(59, 130, 246, 0.5);
             box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
         }
+
         .tool-card::after {
             content: '→';
             position: absolute;
@@ -47,50 +48,70 @@
             color: var(--text-muted);
             transition: var(--transition);
         }
+
         .tool-card:hover::after {
             right: 1.5rem;
             color: #3b82f6;
         }
+
         .tool-icon {
             font-size: 3rem;
             margin-bottom: 1rem;
         }
+
         .tool-title {
             font-size: 1.5rem;
             font-weight: 700;
         }
+
         .tool-desc {
             color: var(--text-muted);
             font-size: 0.95rem;
             line-height: 1.6;
         }
+
+        .tool-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
     </style>
 </head>
+
 <body>
     <div class="bg-gradient"></div>
     <div class="blob"></div>
-    
-    <div class="container" style="max-width: 1000px;">
+
+    <div class="container" id="app" v-cloak style="max-width: 1000px;">
         <header>
             <h1>Productivity Suite</h1>
             <p class="subtitle">Beautiful tools designed to help you focus on what matters most.</p>
         </header>
 
         <div class="tools-grid">
-            <a href="eisenhower.html" class="tool-card">
-                <div class="tool-icon">⚖️</div>
-                <div class="tool-title">Eisenhower Matrix</div>
-                <div class="tool-desc">Prioritize tasks by urgency and importance. Eliminate time-wasters and focus on high-impact goals.</div>
+            <a v-for="tool in tools" :key="tool.title" :href="tool.href"
+                :class="['tool-card', { disabled: tool.disabled }]">
+                <div class="tool-icon">{{ tool.icon }}</div>
+                <div class="tool-title">{{ tool.title }}</div>
+                <div class="tool-desc">{{ tool.desc }}</div>
             </a>
-            <!--
-            <div class="tool-card" style="opacity: 0.5; cursor: not-allowed;">
-                <div class="tool-icon">🍅</div>
-                <div class="tool-title">Pomodoro Timer</div>
-                <div class="tool-desc">Focus sessions with timed breaks. Coming soon.</div>
-            </div>
-            -->
-
         </div>
     </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        const { createApp, ref } = Vue;
+        createApp({
+            setup() {
+                const tools = ref([
+                    { title: 'Eisenhower Matrix', icon: '⚖️', href: 'eisenhower.html', desc: 'Prioritize tasks by urgency and importance. Eliminate time-wasters and focus on high-impact goals.', disabled: false },
+                    { title: 'Pomodoro Timer', icon: '🍅', href: '#', desc: 'Focus sessions with timed breaks. Coming soon.', disabled: true },
+                    { title: 'Kanban Board', icon: '📋', href: '#', desc: 'Visualize your workflow and manage project stages. Coming soon.', disabled: true }
+                ]);
+                return { tools };
+            }
+        }).mount('#app');
+    </script>
 </body>
+
 </html>
