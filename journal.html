@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Journal - Reflection & Growth</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="bg-gradient"></div>
+    <div class="blob" style="background: #a855f7; opacity: 0.05;"></div>
+
+    <div class="container" id="app" v-cloak>
+        <header>
+            <h1>Daily Journal</h1>
+            <p class="subtitle">Capture your thoughts, track your growth, and find clarity.</p>
+        </header>
+
+        <main class="journal-layout">
+            <aside class="journal-sidebar">
+                <div class="sidebar-title">Recent Entries</div>
+                <div class="history-list">
+                    <div v-if="last10Journals.length === 0"
+                        style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 2rem;">
+                        No entries yet. Start writing!
+                    </div>
+                    <div v-for="entry in last10Journals" :key="entry.id" class="history-item"
+                        :class="{ active: entry.id === currentJournal.id }" @click="selectJournal(entry.id)">
+                        <div class="history-date">{{ entry.id }}</div>
+                        <div class="history-preview">{{ entry.content || 'Empty entry...' }}</div>
+                    </div>
+                </div>
+                <button v-if="currentJournal.id !== todayId" @click="selectJournal(todayId)" class="primary-btn"
+                    style="margin-top: 1.5rem; justify-content: center;">
+                    Write Today
+                </button>
+            </aside>
+
+            <section class="journal-main">
+                <div class="journal-top-bar">
+                    <div class="current-date-display">{{ displayDate(currentJournal.id) }}</div>
+                    <div class="save-indicator" :class="{ active: isSaving }">
+                        ✓ Saved
+                    </div>
+                </div>
+
+                <textarea v-model="currentJournal.content" class="journal-editor"
+                    placeholder="How was your day? What's on your mind?"></textarea>
+
+                <div class="journal-actions">
+                    <p style="color: var(--text-muted); font-size: 0.85rem; padding: 0.5rem;">
+                        Changes are saved automatically.
+                    </p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/journal-vue.js"></script>
+</body>
+
+</html>

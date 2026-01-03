@@ -7,6 +7,7 @@ A collection of minimal productivity tools designed for focus and clarity.
 - **[Eisenhower Matrix](eisenhower.html)**: Prioritize tasks by urgency and importance to focus on high-impact goals.
 - **[MoSCoW Prioritizer](moscow.html)**: Categorize tasks into Must, Should, Could, and Won't have to manage project scope effectively.
 - **[Todo Calendar](todo-calender.html)**: Visualize your month and schedule tasks directly onto a calendar to stay ahead of your deadlines.
+- **[Daily Journal](journal.html)**: Capture your thoughts, track your growth, and find clarity with daily entries and history tracking.
 
 ## 🚀 Features
 
