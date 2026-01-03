@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo Calendar - Schedule Your Success</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="bg-gradient"></div>
+    <div class="blob" style="background: #3b82f6; opacity: 0.05;"></div>
+
+    <div class="container" id="app" v-cloak style="max-width: 1200px;">
+        <header>
+            <h1>Todo Calendar</h1>
+            <p class="subtitle">Visualize your month and stay ahead of your deadlines.</p>
+        </header>
+
+        <div class="calendar-controls">
+            <button @click="prevMonth" class="secondary-btn">←</button>
+            <div class="month-display">{{ monthYearLabel }}</div>
+            <button @click="nextMonth" class="secondary-btn">→</button>
+            <button @click="goToToday" class="primary-btn" style="margin-left: 1rem;">Today</button>
+        </div>
+
+        <main class="calendar-grid">
+            <!-- Headers -->
+            <div v-for="day in daysOfWeek" :key="day" class="calendar-day-header">
+                {{ day }}
+            </div>
+
+            <!-- Days -->
+            <div v-for="d in calendarDays" :key="d.dateStr"
+                :class="['calendar-day', { 'other-month': d.isOtherMonth, 'today': d.isToday }]">
+                <div class="day-number">{{ d.day }}</div>
+
+                <div class="calendar-tasks">
+                    <div v-for="task in getTasksForDate(d.dateStr)" :key="task.id"
+                        :class="['cal-task-item', { completed: task.completed }]" @click="toggleComplete(task)"
+                        :title="task.text">
+                        <span class="task-text">{{ task.text }}</span>
+                        <span class="delete-cal-task" @click.stop="deleteTask(task)">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path
+                                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                </path>
+                            </svg>
+                        </span>
+                    </div>
+                </div>
+
+                <button class="add-day-task" @click="openAddModal(d.dateStr)">
+                    + Add Task
+                </button>
+            </div>
+        </main>
+
+        <div class="controls" style="margin-top: 3rem;">
+            <button @click="showResetModal = true" class="reset-btn">Reset Calendar Data</button>
+        </div>
+
+        <!-- Add Task Modal -->
+        <div class="modal-overlay" :style="{ display: showAddModal ? 'flex' : 'none' }">
+            <div class="modal">
+                <h3>Add Task for {{ selectedDate }}</h3>
+                <input type="text" v-model="newTaskText" id="cal-task-input" @keyup.enter="addTask"
+                    placeholder="What's the plan?"
+                    style="width: 100%; padding: 0.75rem; margin-top: 1rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 10px; color: white;">
+                <div class="modal-actions" style="margin-top: 1.5rem;">
+                    <button @click="showAddModal = false" class="secondary-btn">Cancel</button>
+                    <button @click="addTask" class="primary-btn">Add Task</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reset Confirmation Modal -->
+        <div class="modal-overlay" :style="{ display: showResetModal ? 'flex' : 'none' }">
+            <div class="modal">
+                <h3>Reset Calendar Data?</h3>
+                <p style="margin-top: 1rem; color: var(--text-muted);">This will permanently delete all tasks in the
+                    calendar. Other tools will not be affected.</p>
+                <div class="modal-actions">
+                    <button @click="showResetModal = false" class="secondary-btn">Cancel</button>
+                    <button @click="resetData" class="reset-btn" style="padding: 0.5rem 1rem;">Yes, Reset</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/calendar-vue.js"></script>
+</body>
+
+</html>
