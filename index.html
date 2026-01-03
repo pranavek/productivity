@@ -9,6 +9,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        window.location.href = "eisenhower.html";
+    </script>
     <style>
         .tools-grid {
             display: grid;
@@ -105,8 +108,8 @@
             setup() {
                 const tools = ref([
                     { title: 'Eisenhower Matrix', icon: '⚖️', href: 'eisenhower.html', desc: 'Prioritize tasks by urgency and importance. Eliminate time-wasters and focus on high-impact goals.', disabled: false },
-                    { title: 'Pomodoro Timer', icon: '🍅', href: '#', desc: 'Focus sessions with timed breaks. Coming soon.', disabled: true },
-                    { title: 'Kanban Board', icon: '📋', href: '#', desc: 'Visualize your workflow and manage project stages. Coming soon.', disabled: true }
+                    //{ title: 'Pomodoro Timer', icon: '🍅', href: '#', desc: 'Focus sessions with timed breaks. Coming soon.', disabled: true },
+                    //{ title: 'Kanban Board', icon: '📋', href: '#', desc: 'Visualize your workflow and manage project stages. Coming soon.', disabled: true }
                 ]);
                 return { tools };
             }
