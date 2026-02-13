@@ -47,14 +47,78 @@ const db = new sqlite3.Database(dbPath, (err) => {
     }
 });
 
+// TEMPORARY MIGRATION ENDPOINT - Remove after running once!
+app.get('/api/migrate', (req, res) => {
+    console.log('🔄 Running database migration...');
+
+    db.serialize(() => {
+        db.run('ALTER TABLE tasks ADD COLUMN status TEXT DEFAULT "todo"', (err) => {
+            if (err && !err.message.includes('duplicate column')) {
+                console.log('❌ Status column:', err.message);
+            } else {
+                console.log('✅ Status column added');
+            }
+        });
+
+        db.run('ALTER TABLE tasks ADD COLUMN is_milestone INTEGER DEFAULT 0', (err) => {
+            if (err && !err.message.includes('duplicate column')) {
+                console.log('❌ Milestone column:', err.message);
+            } else {
+                console.log('✅ Milestone column added');
+            }
+        });
+
+        db.run('ALTER TABLE tasks ADD COLUMN category TEXT', (err) => {
+            if (err && !err.message.includes('duplicate column')) {
+                console.log('❌ Category column:', err.message);
+            } else {
+                console.log('✅ Category column added');
+            }
+        });
+
+        db.run('ALTER TABLE tasks ADD COLUMN color TEXT', (err) => {
+            if (err && !err.message.includes('duplicate column')) {
+                console.log('❌ Color column:', err.message);
+            } else {
+                console.log('✅ Color column added');
+            }
+        });
+
+        db.run('ALTER TABLE tasks ADD COLUMN description TEXT DEFAULT ""', (err) => {
+            if (err && !err.message.includes('duplicate column')) {
+                console.log('❌ Description column:', err.message);
+            } else {
+                console.log('✅ Description column added');
+            }
+
+            // Migrate existing data after all columns are added
+            db.run('UPDATE tasks SET status = "completed" WHERE completed = 1 AND (status IS NULL OR status = "")', (err) => {
+                if (err) console.log('Migration update error:', err.message);
+                else console.log('✅ Migrated completed tasks to status');
+            });
+
+            db.run('UPDATE tasks SET status = "todo" WHERE completed = 0 AND (status IS NULL OR status = "")', (err) => {
+                if (err) console.log('Migration update error:', err.message);
+                else console.log('✅ Migrated pending tasks to status');
+            });
+
+            console.log('🎉 Migration completed!');
+            res.json({
+                success: true,
+                message: 'Database migration completed. Please remove this endpoint and restart the server.'
+            });
+        });
+    });
+});
+
 // TASK ENDPOINTS
 
 app.post('/api/tasks/add', (req, res) => {
-    const {text, type, completed, createdAt, priority, quadrant, date} = req.body;
+    const {text, type, completed, createdAt, priority, quadrant, date, status, is_milestone, category, color, description} = req.body;
 
     db.run(
-        'INSERT INTO tasks (text, type, completed, created_at, priority, quadrant, date) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [text, type, completed ? 1 : 0, createdAt, priority, quadrant, date],
+        'INSERT INTO tasks (text, type, completed, created_at, priority, quadrant, date, status, is_milestone, category, color, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [text, type, completed ? 1 : 0, createdAt, priority, quadrant, date, status || 'todo', is_milestone ? 1 : 0, category, color, description || ''],
         function(err) {
             if (err) return res.status(500).json({error: err.message});
             res.status(201).json({id: this.lastID});
@@ -81,7 +145,12 @@ app.get('/api/tasks/all', (req, res) => {
             createdAt: row.created_at,
             priority: row.priority,
             quadrant: row.quadrant,
-            date: row.date
+            date: row.date,
+            status: row.status || (row.completed ? 'completed' : 'todo'),
+            isMilestone: Boolean(row.is_milestone),
+            category: row.category,
+            color: row.color,
+            description: row.description || ''
         }));
 
         res.json(tasks);
@@ -90,11 +159,11 @@ app.get('/api/tasks/all', (req, res) => {
 
 app.put('/api/tasks/update', (req, res) => {
     const {id} = req.query;
-    const {text, completed, priority, quadrant, date} = req.body;
+    const {text, completed, priority, quadrant, date, status, is_milestone, category, color, description} = req.body;
 
     db.run(
-        'UPDATE tasks SET text = ?, completed = ?, priority = ?, quadrant = ?, date = ? WHERE id = ?',
-        [text, completed ? 1 : 0, priority, quadrant, date, id],
+        'UPDATE tasks SET text = ?, completed = ?, priority = ?, quadrant = ?, date = ?, status = ?, is_milestone = ?, category = ?, color = ?, description = ? WHERE id = ?',
+        [text, completed ? 1 : 0, priority, quadrant, date, status, is_milestone ? 1 : 0, category, color, description, id],
         (err) => {
             if (err) return res.status(500).json({error: err.message});
             res.json({success: true});
@@ -118,6 +187,41 @@ app.delete('/api/tasks/clear', (req, res) => {
         if (err) return res.status(500).json({error: err.message});
         res.json({success: true});
     });
+});
+
+// Get unique categories
+app.get('/api/tasks/categories', (req, res) => {
+    db.all(
+        'SELECT DISTINCT category FROM tasks WHERE type = ? AND category IS NOT NULL ORDER BY category',
+        ['calendar'],
+        (err, rows) => {
+            if (err) return res.status(500).json({error: err.message});
+            res.json(rows.map(r => r.category));
+        }
+    );
+});
+
+// Get summary statistics
+app.get('/api/tasks/summary', (req, res) => {
+    const {startDate, endDate} = req.query;
+
+    db.all(
+        `SELECT
+            status,
+            category,
+            is_milestone,
+            COUNT(*) as count
+        FROM tasks
+        WHERE type = 'calendar'
+            AND date >= ?
+            AND date <= ?
+        GROUP BY status, category, is_milestone`,
+        [startDate, endDate],
+        (err, rows) => {
+            if (err) return res.status(500).json({error: err.message});
+            res.json(rows);
+        }
+    );
 });
 
 // JOURNAL ENDPOINTS

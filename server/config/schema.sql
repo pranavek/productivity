@@ -6,7 +6,12 @@ CREATE TABLE IF NOT EXISTS tasks (
     created_at INTEGER NOT NULL,
     priority TEXT CHECK(priority IS NULL OR priority IN ('must', 'should', 'could', 'wont')),
     quadrant TEXT CHECK(quadrant IS NULL OR quadrant IN ('q1', 'q2', 'q3', 'q4')),
-    date TEXT
+    date TEXT,
+    status TEXT CHECK(status IS NULL OR status IN ('todo', 'in-progress', 'blocked', 'completed', 'cancelled')) DEFAULT 'todo',
+    is_milestone INTEGER DEFAULT 0,
+    category TEXT CHECK(category IS NULL OR category IN ('work', 'personal', 'health', 'finance', 'social')),
+    color TEXT,
+    description TEXT DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS journals (

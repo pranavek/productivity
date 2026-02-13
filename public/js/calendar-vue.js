@@ -2,20 +2,60 @@ const { createApp, ref, onMounted, computed } = Vue;
 
 createApp({
     setup() {
+        // State
         const tasks = ref([]);
         const currentDate = ref(new Date());
         const showAddModal = ref(false);
+        const showEventModal = ref(false);
         const selectedDate = ref(null);
+        const selectedEvent = ref(null);
         const newTaskText = ref('');
-        const showResetModal = ref(false);
+        const showSummaryPanel = ref(false);
+        const showToolbar = ref(true);
 
+        // View and filter state
+        const viewMode = ref('month'); // 'month', 'week', 'agenda', 'timeline'
+        const filterCategory = ref(null);
+        const filterStatus = ref(null);
+        const draggedTask = ref(null);
+
+        // Constants
         const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+        const eventCategories = [
+            {name: 'Work', value: 'work', color: '#3b82f6'},
+            {name: 'Personal', value: 'personal', color: '#8b5cf6'},
+            {name: 'Health', value: 'health', color: '#10b981'},
+            {name: 'Finance', value: 'finance', color: '#f59e0b'},
+            {name: 'Social', value: 'social', color: '#ec4899'}
+        ];
+
+        const eventColors = [
+            {name: 'Blue', value: '#3b82f6'},
+            {name: 'Green', value: '#10b981'},
+            {name: 'Red', value: '#ef4444'},
+            {name: 'Yellow', value: '#f59e0b'},
+            {name: 'Purple', value: '#a855f7'},
+            {name: 'Pink', value: '#ec4899'},
+            {name: 'Cyan', value: '#06b6d4'},
+            {name: 'Gray', value: '#64748b'}
+        ];
+
+        const statusOptions = [
+            {value: 'todo', label: 'To Do'},
+            {value: 'in-progress', label: 'In Progress'},
+            {value: 'blocked', label: 'Blocked'},
+            {value: 'completed', label: 'Completed'},
+            {value: 'cancelled', label: 'Cancelled'}
+        ];
+
+        // Data loading
         const loadTasks = async () => {
             const allTasks = await TaskDB.getAll();
             tasks.value = allTasks.filter(t => t.type === 'calendar');
         };
 
+        // Calendar grid computation
         const calendarDays = computed(() => {
             const year = currentDate.value.getFullYear();
             const month = currentDate.value.getMonth();
@@ -65,33 +105,276 @@ createApp({
             return days;
         });
 
+        // Week view days
+        const weekDays = computed(() => {
+            if (viewMode.value !== 'week') return [];
+
+            const startOfWeek = new Date(currentDate.value);
+            startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+
+            const days = [];
+            for (let i = 0; i < 7; i++) {
+                const day = new Date(startOfWeek);
+                day.setDate(day.getDate() + i);
+                days.push({
+                    date: day,
+                    dateStr: day.toISOString().split('T')[0],
+                    isToday: isToday(day)
+                });
+            }
+
+            return days;
+        });
+
+        // Filtered tasks
+        const filteredTasks = computed(() => {
+            let filtered = tasks.value;
+
+            if (filterCategory.value) {
+                filtered = filtered.filter(t => t.category === filterCategory.value);
+            }
+
+            if (filterStatus.value) {
+                filtered = filtered.filter(t => t.status === filterStatus.value);
+            }
+
+            return filtered;
+        });
+
+        // Agenda events (next 30 days)
+        const agendaEvents = computed(() => {
+            if (viewMode.value !== 'agenda') return [];
+
+            const today = new Date();
+            const endDate = new Date(today);
+            endDate.setDate(endDate.getDate() + 30);
+
+            const todayStr = today.toISOString().split('T')[0];
+            const endDateStr = endDate.toISOString().split('T')[0];
+
+            return filteredTasks.value
+                .filter(t => t.date >= todayStr && t.date <= endDateStr)
+                .sort((a, b) => a.date.localeCompare(b.date));
+        });
+
+        // Group agenda events by date
+        const groupedAgendaEvents = computed(() => {
+            const grouped = {};
+            agendaEvents.value.forEach(event => {
+                if (!grouped[event.date]) {
+                    grouped[event.date] = [];
+                }
+                grouped[event.date].push(event);
+            });
+            return grouped;
+        });
+
+        // Calendar summary statistics
+        const calendarSummary = computed(() => {
+            const summary = {
+                total: filteredTasks.value.length,
+                byStatus: {},
+                byCategory: {},
+                milestones: 0,
+                overdue: 0,
+                next7Days: 0,
+                next14Days: 0,
+                next21Days: 0,
+                next30Days: 0
+            };
+
+            const today = new Date().toISOString().split('T')[0];
+
+            // Calculate date ranges
+            const next7 = new Date();
+            next7.setDate(next7.getDate() + 7);
+            const next7Str = next7.toISOString().split('T')[0];
+
+            const next14 = new Date();
+            next14.setDate(next14.getDate() + 14);
+            const next14Str = next14.toISOString().split('T')[0];
+
+            const next21 = new Date();
+            next21.setDate(next21.getDate() + 21);
+            const next21Str = next21.toISOString().split('T')[0];
+
+            const next30 = new Date();
+            next30.setDate(next30.getDate() + 30);
+            const next30Str = next30.toISOString().split('T')[0];
+
+            filteredTasks.value.forEach(task => {
+                // Count by status
+                summary.byStatus[task.status] = (summary.byStatus[task.status] || 0) + 1;
+
+                // Count by category
+                if (task.category) {
+                    summary.byCategory[task.category] = (summary.byCategory[task.category] || 0) + 1;
+                }
+
+                // Count milestones
+                if (task.isMilestone) {
+                    summary.milestones++;
+                }
+
+                // Count overdue
+                if (task.date < today && task.status !== 'completed' && task.status !== 'cancelled') {
+                    summary.overdue++;
+                }
+
+                // Count upcoming periods (exclude completed/cancelled)
+                if (task.status !== 'completed' && task.status !== 'cancelled') {
+                    if (task.date >= today && task.date <= next7Str) {
+                        summary.next7Days++;
+                    }
+                    if (task.date >= today && task.date <= next14Str) {
+                        summary.next14Days++;
+                    }
+                    if (task.date >= today && task.date <= next21Str) {
+                        summary.next21Days++;
+                    }
+                    if (task.date >= today && task.date <= next30Str) {
+                        summary.next30Days++;
+                    }
+                }
+            });
+
+            return summary;
+        });
+
+        // Utility functions
         const formatDate = (year, month, day) => {
             const d = new Date(year, month, day);
             return d.toISOString().split('T')[0];
         };
 
-        const monthYearLabel = computed(() => {
+        const isToday = (date) => {
+            const today = new Date();
+            return date.getDate() === today.getDate() &&
+                   date.getMonth() === today.getMonth() &&
+                   date.getFullYear() === today.getFullYear();
+        };
+
+        const formatAgendaDate = (dateStr) => {
+            const date = new Date(dateStr);
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+
+            if (dateStr === today.toISOString().split('T')[0]) {
+                return 'Today - ' + date.toLocaleDateString('en-US', {weekday: 'long', month: 'long', day: 'numeric'});
+            } else if (dateStr === tomorrow.toISOString().split('T')[0]) {
+                return 'Tomorrow - ' + date.toLocaleDateString('en-US', {weekday: 'long', month: 'long', day: 'numeric'});
+            } else {
+                return date.toLocaleDateString('en-US', {weekday: 'long', month: 'long', day: 'numeric'});
+            }
+        };
+
+        const formatTimelineDate = (dateStr) => {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'});
+        };
+
+        const formatStatus = (status) => {
+            const option = statusOptions.find(s => s.value === status);
+            return option ? option.label : status;
+        };
+
+        const getTaskColor = (task) => {
+            if (task.color) return task.color;
+            if (task.status === 'completed') return '#64748b';
+            if (task.status === 'cancelled') return '#94a3b8';
+            if (task.status === 'blocked') return '#ef4444';
+            if (task.isMilestone) return '#f59e0b';
+            if (task.category) {
+                const cat = eventCategories.find(c => c.value === task.category);
+                return cat ? cat.color : '#3b82f6';
+            }
+            return '#3b82f6';
+        };
+
+        // Period label (month or week)
+        const periodLabel = computed(() => {
+            if (viewMode.value === 'week') {
+                const start = weekDays.value[0]?.date;
+                const end = weekDays.value[6]?.date;
+                if (start && end) {
+                    return `${start.toLocaleDateString('en-US', {month: 'short', day: 'numeric'})} - ${end.toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}`;
+                }
+            }
             return currentDate.value.toLocaleString('default', { month: 'long', year: 'numeric' });
         });
 
-        const prevMonth = () => {
-            currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() - 1, 1);
+        // Navigation
+        const prevPeriod = () => {
+            if (viewMode.value === 'week') {
+                currentDate.value = new Date(currentDate.value.getTime() - 7 * 24 * 60 * 60 * 1000);
+            } else {
+                currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() - 1, 1);
+            }
         };
 
-        const nextMonth = () => {
-            currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() + 1, 1);
+        const nextPeriod = () => {
+            if (viewMode.value === 'week') {
+                currentDate.value = new Date(currentDate.value.getTime() + 7 * 24 * 60 * 60 * 1000);
+            } else {
+                currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() + 1, 1);
+            }
         };
 
         const goToToday = () => {
             currentDate.value = new Date();
         };
 
+        // Event modal
         const openAddModal = (dateStr) => {
             selectedDate.value = dateStr;
             showAddModal.value = true;
             setTimeout(() => document.getElementById('cal-task-input')?.focus(), 50);
         };
 
+        const openEventModal = (task = null, dateStr = null) => {
+            if (task) {
+                selectedEvent.value = JSON.parse(JSON.stringify(task));
+            } else {
+                selectedEvent.value = {
+                    text: '',
+                    date: dateStr || selectedDate.value,
+                    status: 'todo',
+                    isMilestone: false,
+                    category: null,
+                    color: null,
+                    description: '',
+                    completed: false,
+                    type: 'calendar',
+                    createdAt: Date.now()
+                };
+            }
+            showEventModal.value = true;
+            setTimeout(() => document.getElementById('event-title-input')?.focus(), 50);
+        };
+
+        const saveEvent = async () => {
+            if (!selectedEvent.value.text.trim()) return;
+
+            // Sync completed status with status field
+            if (selectedEvent.value.status === 'completed') {
+                selectedEvent.value.completed = true;
+            } else {
+                selectedEvent.value.completed = false;
+            }
+
+            if (selectedEvent.value.id) {
+                await TaskDB.update(selectedEvent.value);
+            } else {
+                await TaskDB.add(selectedEvent.value);
+            }
+
+            showEventModal.value = false;
+            selectedEvent.value = null;
+            await loadTasks();
+        };
+
+        // Simple add task (legacy support)
         const addTask = async () => {
             if (!newTaskText.value.trim()) return;
 
@@ -99,8 +382,13 @@ createApp({
                 text: newTaskText.value.trim(),
                 date: selectedDate.value,
                 completed: false,
+                status: 'todo',
                 type: 'calendar',
-                createdAt: Date.now()
+                createdAt: Date.now(),
+                isMilestone: false,
+                category: null,
+                color: null,
+                description: ''
             };
 
             await TaskDB.add(task);
@@ -111,6 +399,14 @@ createApp({
 
         const toggleComplete = async (task) => {
             task.completed = !task.completed;
+            task.status = task.completed ? 'completed' : 'todo';
+            await TaskDB.update(JSON.parse(JSON.stringify(task)));
+            await loadTasks();
+        };
+
+        const updateEventStatus = async (task, newStatus) => {
+            task.status = newStatus;
+            task.completed = (newStatus === 'completed');
             await TaskDB.update(JSON.parse(JSON.stringify(task)));
             await loadTasks();
         };
@@ -120,39 +416,110 @@ createApp({
             await loadTasks();
         };
 
-        const resetData = async () => {
-            for (const task of tasks.value) {
-                await TaskDB.delete(task.id);
-            }
-            showResetModal.value = false;
-            await loadTasks();
+        const getTasksForDate = (dateStr) => {
+            return filteredTasks.value.filter(t => t.date === dateStr);
         };
 
-        const getTasksForDate = (dateStr) => {
-            return tasks.value.filter(t => t.date === dateStr);
+        const getEventsByMilestone = (category) => {
+            return filteredTasks.value
+                .filter(t => t.category === category)
+                .sort((a, b) => a.date.localeCompare(b.date));
+        };
+
+        const getEventsWithoutCategory = () => {
+            return filteredTasks.value
+                .filter(t => !t.category)
+                .sort((a, b) => a.date.localeCompare(b.date));
+        };
+
+        // Drag and drop
+        const onDragStart = (event, task) => {
+            draggedTask.value = task;
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', task.id.toString());
+        };
+
+        const onDragOver = (event) => {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'move';
+        };
+
+        const onDrop = async (event, targetDateStr) => {
+            event.preventDefault();
+
+            if (!draggedTask.value) return;
+
+            const task = JSON.parse(JSON.stringify(draggedTask.value));
+            task.date = targetDateStr;
+
+            await TaskDB.update(task);
+            await loadTasks();
+
+            draggedTask.value = null;
+        };
+
+        const onDragEnd = () => {
+            draggedTask.value = null;
         };
 
         onMounted(loadTasks);
 
         return {
+            // State
             tasks,
             currentDate,
             showAddModal,
+            showEventModal,
             selectedDate,
+            selectedEvent,
             newTaskText,
-            showResetModal,
+            showSummaryPanel,
+            showToolbar,
+            viewMode,
+            filterCategory,
+            filterStatus,
+            draggedTask,
+
+            // Constants
             daysOfWeek,
+            eventCategories,
+            eventColors,
+            statusOptions,
+
+            // Computed
             calendarDays,
-            monthYearLabel,
-            prevMonth,
-            nextMonth,
+            weekDays,
+            filteredTasks,
+            agendaEvents,
+            groupedAgendaEvents,
+            calendarSummary,
+            periodLabel,
+
+            // Methods
+            loadTasks,
+            formatDate,
+            isToday,
+            formatAgendaDate,
+            formatTimelineDate,
+            formatStatus,
+            getTaskColor,
+            prevPeriod,
+            nextPeriod,
             goToToday,
             openAddModal,
+            openEventModal,
+            saveEvent,
             addTask,
             toggleComplete,
+            updateEventStatus,
             deleteTask,
-            resetData,
-            getTasksForDate
+            getTasksForDate,
+            getEventsByMilestone,
+            getEventsWithoutCategory,
+            onDragStart,
+            onDragOver,
+            onDrop,
+            onDragEnd
         };
     }
 }).mount('#app');
