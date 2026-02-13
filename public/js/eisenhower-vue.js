@@ -47,7 +47,7 @@ createApp({
         };
 
         const resetData = async () => {
-            await TaskDB.clearAll();
+            await TaskDB.clearType('eisenhower');
             showResetModal.value = false;
             await loadTasks();
         };
