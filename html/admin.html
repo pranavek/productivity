@@ -9,6 +9,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Preload critical SQLite assets -->
+    <link rel="preload" href="../js/sqlite/sqlite3.wasm" as="fetch" type="application/wasm" crossorigin>
+    <link rel="preload" href="../js/sqlite/sqlite3.js" as="script">
 </head>
 
 <body>
@@ -50,7 +54,7 @@
         </div>
     </div>
 
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <script src="../js/db.js"></script>
     <script>
         const { createApp, ref } = Vue;
