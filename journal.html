@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Journal - Reflection & Growth</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="bg-gradient"></div>
+    <div class="blob" style="background: #a855f7; opacity: 0.05;"></div>
+
+    <div class="container" id="app" v-cloak>
+        <header>
+            <h1>Daily Journal</h1>
+            <p class="subtitle">Capture your thoughts, track your growth, and find clarity.</p>
+        </header>
+
+        <main class="journal-layout">
+            <aside class="journal-sidebar">
+                <div class="sidebar-title">Recent Entries</div>
+                <div class="history-list">
+                    <div v-for="entry in journalHistory" :key="entry.id"
+                        :class="['history-item', { active: entry.id === currentDate }]" @click="loadEntry(entry.id)">
+                        <div class="history-date">{{ entry.displayDate }}</div>
+                        <div class="history-preview">{{ entry.preview }}</div>
+                    </div>
+                </div>
+            </aside>
+
+            <section class="journal-main">
+                <div class="journal-top-bar">
+                    <div class="current-date-display">{{ currentDisplayDate }}</div>
+                    <div class="save-indicator" :class="{ active: showSaved }">
+                        <span>✓</span>
+                        <span>Saved</span>
+                    </div>
+                </div>
+
+                <textarea class="journal-editor" v-model="currentEntry" @input="onEntryChange"
+                    placeholder="What's on your mind today?"></textarea>
+            </section>
+        </main>
+    </div>
+
+    <script type="module" src="/src/journal.js"></script>
+</body>
+
+</html>

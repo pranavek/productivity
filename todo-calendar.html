@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo Calendar - Schedule Your Success</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="bg-gradient"></div>
+    <div class="blob" style="background: #3b82f6; opacity: 0.05;"></div>
+
+    <div class="container" id="app" v-cloak style="max-width: 1200px;">
+        <header>
+            <h1>Todo Calendar</h1>
+            <p class="subtitle">Visualize your month and stay ahead of your deadlines.</p>
+        </header>
+
+        <div class="calendar-controls">
+            <button @click="prevMonth" class="secondary-btn">←</button>
+            <div class="month-display">{{ monthYearLabel }}</div>
+            <button @click="nextMonth" class="secondary-btn">→</button>
+            <button @click="goToToday" class="secondary-btn">Today</button>
+        </div>
+
+        <div class="calendar-grid">
+            <div v-for="day in daysOfWeek" :key="day" class="calendar-day-header">{{ day }}</div>
+
+            <div v-for="dayObj in calendarDays" :key="dayObj.dateStr" class="calendar-day"
+                :class="{ 'other-month': dayObj.isOtherMonth, 'today': dayObj.isToday }">
+                <div class="day-number">{{ dayObj.day }}</div>
+                <div class="calendar-tasks">
+                    <div v-for="task in getTasksForDate(dayObj.dateStr)" :key="task.id" class="cal-task-item"
+                        :class="{ completed: task.completed }" @click="toggleComplete(task)">
+                        <span>{{ task.text }}</span>
+                        <button class="delete-cal-task" @click.stop="deleteTask(task)" title="Delete">×</button>
+                    </div>
+                </div>
+                <button class="add-day-task" @click="openAddModal(dayObj.dateStr)">+ Add</button>
+            </div>
+        </div>
+
+        <div class="modal-overlay" :style="{ display: showAddModal ? 'flex' : 'none' }">
+            <div class="modal">
+                <h3>Add Task</h3>
+                <input id="cal-task-input" type="text" v-model="newTaskText" @keyup.enter="addTask"
+                    placeholder="What needs to be done?" autocomplete="off"
+                    style="width: 100%; margin-top: 1rem; padding: 0.75rem;">
+                <div class="modal-actions">
+                    <button @click="showAddModal = false" class="secondary-btn">Cancel</button>
+                    <button @click="addTask" class="primary-btn">Add Task</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-overlay" :style="{ display: showResetModal ? 'flex' : 'none' }">
+            <div class="modal">
+                <h3>Reset Calendar Data?</h3>
+                <p style="margin-top: 1rem; color: var(--text-muted);">This will delete all calendar tasks.</p>
+                <div class="modal-actions">
+                    <button @click="showResetModal = false" class="secondary-btn">Cancel</button>
+                    <button @click="resetData" class="reset-btn">Yes, Reset</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button @click="showResetModal = true" class="reset-btn">Reset Calendar Data</button>
+        </div>
+    </div>
+
+    <script type="module" src="/src/calendar.js"></script>
+</body>
+
+</html>

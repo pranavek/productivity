@@ -1,0 +1,28 @@
+{
+  "name": "productivity-suite",
+  "version": "1.0.0",
+  "description": "A collection of minimal productivity tools designed for focus and clarity",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "sqlocal": "^0.11.1",
+    "vue": "^3.4.21"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.4",
+    "vite": "^5.1.6"
+  },
+  "keywords": [
+    "productivity",
+    "eisenhower-matrix",
+    "moscow",
+    "todo",
+    "journal"
+  ],
+  "author": "",
+  "license": "MIT"
+}

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eisenhower Matrix - Prioritize Tasks</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="bg-gradient"></div>
+    <div class="blob"></div>
+
+    <div class="container" id="app" v-cloak>
+        <header>
+            <h1>Eisenhower Matrix</h1>
+            <p class="subtitle">Focus on what's important, not just what's urgent.</p>
+        </header>
+
+        <section class="input-section">
+            <div class="input-group">
+                <input type="text" v-model="newTaskText" @keyup.enter="addTask" placeholder="What needs to be done?"
+                    autocomplete="off">
+            </div>
+            <div class="select-group">
+                <select v-model="newTaskQuadrant">
+                    <option value="q1">Urgent & Important (Do)</option>
+                    <option value="q2">Not Urgent & Important (Schedule)</option>
+                    <option value="q3">Urgent & Not Important (Delegate)</option>
+                    <option value="q4">Not Urgent & Not Important (Eliminate)</option>
+                </select>
+            </div>
+            <button @click="addTask" class="primary-btn">
+                <span>Add Task</span>
+            </button>
+        </section>
+
+        <main class="matrix-container">
+            <!-- X Axis Labels -->
+            <div class="axis-label-row">
+                <div>Urgent</div>
+                <div>Not Urgent</div>
+            </div>
+
+            <!-- Y Axis Labels -->
+            <div class="axis-label-col">
+                <div>Important</div>
+                <div>Not Important</div>
+            </div>
+
+            <!-- Quadrants -->
+            <div v-for="q in quadrants" :key="q.id" :class="['quadrant', q.id]">
+                <div class="quadrant-header">
+                    <span class="quadrant-title">{{ q.title }}</span>
+                    <span class="quadrant-tag">{{ q.label }}</span>
+                </div>
+                <div class="task-list">
+                    <!-- Uncompleted Tasks -->
+                    <div v-for="task in getTasks(q.id, false)" :key="task.id" class="task-item">
+                        <input type="checkbox" class="task-checkbox" v-model="task.completed"
+                            @change="updateTask(task)">
+                        <span class="task-text">{{ task.text }}</span>
+                        <button class="delete-task" @click="deleteTask(task.id)" title="Delete Task">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path
+                                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                </path>
+                                <line x1="10" y1="11" x2="10" y2="17"></line>
+                                <line x1="14" y1="11" x2="14" y2="17"></line>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Completed Tasks Separator -->
+                    <div v-if="hasCompleted(q.id)" class="completed-separator">Completed</div>
+
+                    <!-- Completed Tasks -->
+                    <div v-for="task in getTasks(q.id, true)" :key="task.id" class="task-item completed">
+                        <input type="checkbox" class="task-checkbox" v-model="task.completed"
+                            @change="updateTask(task)">
+                        <span class="task-text">{{ task.text }}</span>
+                        <button class="delete-task" @click="deleteTask(task.id)" title="Delete Task">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path
+                                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                </path>
+                                <line x1="10" y1="11" x2="10" y2="17"></line>
+                                <line x1="14" y1="11" x2="14" y2="17"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <div class="controls">
+            <button @click="showResetModal = true" class="reset-btn">Reset All Data</button>
+        </div>
+
+        <!-- Modal for confirmation -->
+        <div class="modal-overlay" :style="{ display: showResetModal ? 'flex' : 'none' }">
+            <div class="modal">
+                <h3>Reset All Data?</h3>
+                <p style="margin-top: 1rem; color: var(--text-muted);">This will permanently delete all tasks in the
+                    matrix. This action cannot be undone.</p>
+                <div class="modal-actions">
+                    <button @click="showResetModal = false" class="secondary-btn">Cancel</button>
+                    <button @click="resetData" class="reset-btn" style="padding: 0.5rem 1rem;">Yes, Reset</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vite will inject the module scripts -->
+    <script type="module" src="/src/eisenhower.js"></script>
+</body>
+
+</html>
