@@ -1,6 +1,6 @@
 /* SQLite Web Worker - Runs in Worker context */
 'use strict';
-importScripts('sqlite3.js');
+importScripts('./sqlite3.js');
 
 let db = null;
 const DB_NAME = '/productivity.sqlite3';
