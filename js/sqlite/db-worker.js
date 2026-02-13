@@ -27,6 +27,9 @@ sqlite3InitModule({
         CREATE TABLE IF NOT EXISTS journals (id TEXT PRIMARY KEY, data TEXT);
     `);
 
+    // Store sqlite3 reference globally for export/import operations
+    self.sqlite3 = sqlite3;
+
     // Notify main thread that worker is ready
     self.postMessage({ type: 'ready' });
 }).catch((err) => {
@@ -47,6 +50,21 @@ self.onmessage = function (e) {
                 result = null;
                 break;
 
+            case 'execParams': {
+                // Execute with parameters for security
+                const sql = args[0];
+                const params = args[1] || [];
+                const stmt = db.prepare(sql);
+                try {
+                    stmt.bind(params);
+                    stmt.step();
+                } finally {
+                    stmt.finalize();
+                }
+                result = null;
+                break;
+            }
+
             case 'selectValue':
                 result = db.selectValue(args[0]);
                 break;
@@ -62,6 +80,24 @@ self.onmessage = function (e) {
                 break;
             }
 
+            case 'selectArrayParams': {
+                // Select with parameters for security
+                const sql = args[0];
+                const params = args[1] || [];
+                const rows = [];
+                const stmt = db.prepare(sql);
+                try {
+                    stmt.bind(params);
+                    while (stmt.step()) {
+                        rows.push(stmt.get([]));
+                    }
+                } finally {
+                    stmt.finalize();
+                }
+                result = rows;
+                break;
+            }
+
             case 'selectObjects': {
                 const rows = [];
                 db.exec({
@@ -70,6 +106,40 @@ self.onmessage = function (e) {
                     callback: (row) => rows.push(row)
                 });
                 result = rows;
+                break;
+            }
+
+            case 'exportDB': {
+                // Export database file using OPFS
+                if (!self.sqlite3) {
+                    throw new Error('SQLite not initialized');
+                }
+                const bytes = self.sqlite3.capi.sqlite3_js_db_export(db.pointer);
+                result = bytes;
+                break;
+            }
+
+            case 'importDB': {
+                // Import database file
+                if (!self.sqlite3) {
+                    throw new Error('SQLite not initialized');
+                }
+                const bytes = args[0];
+
+                // Close current database
+                db.close();
+
+                // Import the new database
+                self.sqlite3.capi.sqlite3_js_db_import(DB_NAME, bytes);
+
+                // Reopen database
+                if (self.sqlite3.capi.sqlite3_vfs_find('opfs')) {
+                    db = new self.sqlite3.oo1.DB(DB_NAME, 'ct', 'opfs');
+                } else {
+                    db = new self.sqlite3.oo1.DB(DB_NAME, 'ct');
+                }
+
+                result = null;
                 break;
             }
 

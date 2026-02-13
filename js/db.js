@@ -1,5 +1,7 @@
-/* eslint-disable no-console */
-const DB_NAME = '/productivity.sqlite3';
+/**
+ * Secure SQLite Database Layer
+ * Uses existing SQLite WASM with parameterized queries for security
+ */
 
 let worker = null;
 let initPromise = null;
@@ -17,13 +19,13 @@ async function initDB() {
             const { id, type, result, error } = e.data;
 
             if (type === 'ready') {
-                console.log('Main: Worker ready');
+                console.log('Database ready');
                 resolve(worker);
                 return;
             }
 
             if (type === 'error') {
-                console.error('Main: Worker error:', error);
+                console.error('Database error:', error);
                 reject(new Error(error));
                 return;
             }
@@ -40,7 +42,7 @@ async function initDB() {
         };
 
         worker.onerror = (err) => {
-            console.error('Main: Worker error:', err);
+            console.error('Worker error:', err);
             reject(err);
         };
     });
@@ -48,48 +50,57 @@ async function initDB() {
     return initPromise;
 }
 
-// Helper to send messages to worker and get results
+// Helper to send messages to worker with proper error handling
 function workerExec(method, ...args) {
     return new Promise(async (resolve, reject) => {
-        await initDB();
-        const id = ++messageId;
-        pendingMessages.set(id, { resolve, reject });
-        worker.postMessage({ id, method, args });
+        try {
+            await initDB();
+            const id = ++messageId;
+            pendingMessages.set(id, { resolve, reject });
+            worker.postMessage({ id, method, args });
+
+            // Timeout after 30 seconds
+            setTimeout(() => {
+                if (pendingMessages.has(id)) {
+                    pendingMessages.delete(id);
+                    reject(new Error('Database operation timed out'));
+                }
+            }, 30000);
+        } catch (error) {
+            reject(error);
+        }
     });
 }
 
 /**
- * Task Operations using SQLite
- * Stores task objects as JSON in 'data' column.
+ * Task Operations using SQLite with parameterized queries
  */
 const TaskDB = {
     async add(task) {
         await initDB();
-        // Exclude ID from the stored JSON to avoid confusion, 
-        // effectively letting SQLite manage the ID. 
-        // Or we can store the ID inside the JSON too? 
-        // IndexedDB assigns ID "on insert".
-        // Use copy to avoid mutating original
-        const { id, ...rest } = task;
 
+        const { id, ...rest } = task;
         const dataStr = JSON.stringify(rest);
 
-        await workerExec('exec', `INSERT INTO tasks (data) VALUES ('${dataStr.replace(/'/g, "''")}')`);
+        // Use parameterized query for security
+        await workerExec('execParams',
+            'INSERT INTO tasks (data) VALUES (?)',
+            [dataStr]
+        );
 
-        // Retrieve the auto-generated ID
-        // selectValue is a helper in oo1
         const newId = await workerExec('selectValue', 'SELECT last_insert_rowid()');
         return newId;
     },
 
     async getAll() {
         await initDB();
+
         const rows = await workerExec('selectArray', 'SELECT id, data FROM tasks');
+
         return rows.map(([id, dataStr]) => {
             try {
-                // row is [id, data]
                 const obj = JSON.parse(dataStr);
-                obj.id = id; // Ensure ID matches DB
+                obj.id = id;
                 return obj;
             } catch (e) {
                 console.error('Error parsing task row:', id, e);
@@ -100,17 +111,29 @@ const TaskDB = {
 
     async update(task) {
         await initDB();
-        const { id, ...rest } = task; // Separate ID
+
+        const { id, ...rest } = task;
         if (!id) throw new Error("Task update failed: Missing ID");
 
         const dataStr = JSON.stringify(rest);
-        await workerExec('exec', `UPDATE tasks SET data = '${dataStr.replace(/'/g, "''")}' WHERE id = ${id}`);
+
+        // Use parameterized query for security
+        await workerExec('execParams',
+            'UPDATE tasks SET data = ? WHERE id = ?',
+            [dataStr, id]
+        );
+
         return id;
     },
 
     async delete(id) {
         await initDB();
-        await workerExec('exec', `DELETE FROM tasks WHERE id = ${id}`);
+
+        // Use parameterized query for security
+        await workerExec('execParams',
+            'DELETE FROM tasks WHERE id = ?',
+            [id]
+        );
     },
 
     async clearAll() {
@@ -120,22 +143,35 @@ const TaskDB = {
 };
 
 /**
- * Journal Operations using SQLite
+ * Journal Operations using SQLite with parameterized queries
  */
 const JournalDB = {
     async save(journal) {
         await initDB();
+
         const { id, ...rest } = journal;
         if (!id) throw new Error("Journal save failed: Missing ID");
 
         const dataStr = JSON.stringify(rest);
-        await workerExec('exec', `INSERT OR REPLACE INTO journals (id, data) VALUES ('${id}', '${dataStr.replace(/'/g, "''")}')`);
+
+        // Use parameterized query for security
+        await workerExec('execParams',
+            'INSERT OR REPLACE INTO journals (id, data) VALUES (?, ?)',
+            [id, dataStr]
+        );
+
         return id;
     },
 
     async get(id) {
         await initDB();
-        const rows = await workerExec('selectArray', `SELECT id, data FROM journals WHERE id = '${id}'`);
+
+        // Use parameterized query for security
+        const rows = await workerExec('selectArrayParams',
+            'SELECT id, data FROM journals WHERE id = ?',
+            [id]
+        );
+
         if (rows.length === 0) return null;
 
         const [dbId, dataStr] = rows[0];
@@ -151,13 +187,16 @@ const JournalDB = {
 
     async getAll() {
         await initDB();
+
         const rows = await workerExec('selectArray', 'SELECT id, data FROM journals');
+
         return rows.map(([id, dataStr]) => {
             try {
                 const obj = JSON.parse(dataStr);
                 obj.id = id;
                 return obj;
             } catch (e) {
+                console.error('Error parsing journal:', id, e);
                 return null;
             }
         }).filter(Boolean);
@@ -165,7 +204,12 @@ const JournalDB = {
 
     async delete(id) {
         await initDB();
-        await workerExec('exec', `DELETE FROM journals WHERE id = '${id}'`);
+
+        // Use parameterized query for security
+        await workerExec('execParams',
+            'DELETE FROM journals WHERE id = ?',
+            [id]
+        );
     }
 };
 
@@ -174,13 +218,11 @@ const JournalDB = {
  */
 const BackupDB = {
     async export() {
-        if (!sqlite3) await initDB();
         try {
-            // Read the file from OPFS
-            const bytes = await sqlite3.opfs.entryPoint.readFile(DB_NAME);
+            await initDB();
+            const bytes = await workerExec('exportDB');
             const blob = new Blob([bytes], { type: 'application/x-sqlite3' });
 
-            // Trigger download
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -189,29 +231,34 @@ const BackupDB = {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+
+            console.log('Database exported successfully');
         } catch (e) {
             console.error('Export failed:', e);
             alert('Failed to export database. See console for details.');
+            throw e;
         }
     },
 
     async import(file) {
-        if (!sqlite3) await initDB();
         try {
+            await initDB();
             const arrayBuffer = await file.arrayBuffer();
             const bytes = new Uint8Array(arrayBuffer);
 
-            // Overwrite the file in OPFS
-            await sqlite3.opfs.entryPoint.writeFile(DB_NAME, bytes);
+            await workerExec('importDB', bytes);
 
             alert('Database restored successfully! The page will now reload.');
             window.location.reload();
         } catch (e) {
             console.error('Import failed:', e);
             alert('Failed to import database. Ensure it is a valid SQLite file.');
+            throw e;
         }
     }
 };
 
+// Export to global scope
+window.TaskDB = TaskDB;
+window.JournalDB = JournalDB;
 window.BackupDB = BackupDB;
-
