@@ -11,7 +11,7 @@ async function initDB() {
     if (initPromise) return initPromise;
 
     initPromise = new Promise((resolve, reject) => {
-        worker = new Worker('js/sqlite/db-worker.js');
+        worker = new Worker('/js/sqlite/db-worker.js?v=' + Date.now());
 
         worker.onmessage = (e) => {
             const { id, type, result, error } = e.data;
