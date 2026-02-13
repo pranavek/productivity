@@ -26,7 +26,7 @@ Pull and run the latest image from GitHub Container Registry:
 
 ```bash
 # Pull the latest image
-docker pull ghcr.io/YOUR_USERNAME/productivity:latest
+docker pull ghcr.io/pranavek/productivity:latest
 
 # Run the container
 docker run -d \
@@ -34,7 +34,7 @@ docker run -d \
   -v $(pwd)/data:/app/data \
   --name productivity-suite \
   --restart unless-stopped \
-  ghcr.io/YOUR_USERNAME/productivity:latest
+  ghcr.io/pranavek/productivity:latest
 
 # Access at http://localhost:9191
 ```
@@ -43,26 +43,9 @@ Or use with docker-compose by updating your `docker-compose.yml`:
 ```yaml
 services:
   productivity:
-    image: ghcr.io/YOUR_USERNAME/productivity:latest
+    image: ghcr.io/pranavek/productivity:latest
     # Remove the 'build' section when using pre-built image
 ```
-
-### Local Development
-
-1. Install dependencies:
-   ```bash
-   cd server
-   npm install
-   cd ..
-   ```
-
-2. Start server:
-   ```bash
-   cd server
-   npm start
-   ```
-
-3. Open browser: http://localhost:3000
 
 ### Docker Deployment
 
