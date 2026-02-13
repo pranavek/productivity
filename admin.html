@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Process Data Management - Admin</title>
+    <script src="js/coi-serviceworker.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="bg-gradient"></div>
+
+    <div class="container" id="app" v-cloak style="max-width: 600px;">
+        <header>
+            <h1>Data Administration</h1>
+            <p class="subtitle">Securely manage your local database.</p>
+        </header>
+
+        <section class="tool-card" style="text-align: center; padding: 3rem;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">💾</div>
+            <h2>Backup & Restore</h2>
+            <p style="color: var(--text-muted); margin: 1rem 0 2rem; line-height: 1.6;">
+                Your data is stored in this browser's private file system (OPFS).<br>
+                Export a backup file to keep your data safe, or restore from a previous backup.
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: 1rem; max-width: 300px; margin: 0 auto;">
+                <button @click="backupData" class="primary-btn" style="justify-content: center;">
+                    ⬇️ Export Database
+                </button>
+
+                <button @click="triggerRestore" class="secondary-btn"
+                    style="justify-content: center; border-color: #ef4444; color: #ef4444;">
+                    ⬆️ Restore Database
+                </button>
+                <input type="file" ref="fileInput" @change="restoreData" accept=".sqlite3" style="display: none;">
+
+                <p style="color: #ef4444; font-size: 0.8rem; margin-top: 0.5rem;" v-if="showRestoreWarning">
+                    Warning: Restoring will completely overwrite existing data!
+                </p>
+            </div>
+        </section>
+
+        <div style="text-align: center; margin-top: 2rem;">
+            <a href="index.html" style="color: var(--text-muted); text-decoration: none;">← Back to Dashboard</a>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="js/sqlite3.js"></script>
+    <script src="js/db.js"></script>
+    <script>
+        const { createApp, ref } = Vue;
+        createApp({
+            setup() {
+                const fileInput = ref(null);
+                const showRestoreWarning = ref(false);
+
+                const backupData = async () => {
+                    await BackupDB.export();
+                };
+
+                const triggerRestore = () => {
+                    showRestoreWarning.value = true;
+                    fileInput.value.click();
+                };
+
+                const restoreData = async (event) => {
+                    const file = event.target.files[0];
+                    if (!file) {
+                        showRestoreWarning.value = false;
+                        return;
+                    }
+
+                    if (confirm("CRITICAL WARNING:\n\nThis will PERMANENTLY erase your current data and replace it with the backup file.\n\nAre you absolutely sure?")) {
+                        await BackupDB.import(file);
+                    }
+                    // Reset input
+                    event.target.value = '';
+                    showRestoreWarning.value = false;
+                };
+
+                return { backupData, triggerRestore, restoreData, fileInput, showRestoreWarning };
+            }
+        }).mount('#app');
+    </script>
+</body>
+
+</html>

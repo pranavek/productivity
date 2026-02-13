@@ -187,3 +187,50 @@ const JournalDB = {
         });
     }
 };
+
+/**
+ * Backup and Restore Operations
+ */
+const BackupDB = {
+    async export() {
+        if (!sqlite3) await initDB();
+        try {
+            // Read the file from OPFS
+            const bytes = await sqlite3.opfs.entryPoint.readFile(DB_NAME);
+            const blob = new Blob([bytes], { type: 'application/x-sqlite3' });
+
+            // Trigger download
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'productivity_backup.sqlite3';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch (e) {
+            console.error('Export failed:', e);
+            alert('Failed to export database. See console for details.');
+        }
+    },
+
+    async import(file) {
+        if (!sqlite3) await initDB();
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            const bytes = new Uint8Array(arrayBuffer);
+
+            // Overwrite the file in OPFS
+            await sqlite3.opfs.entryPoint.writeFile(DB_NAME, bytes);
+
+            alert('Database restored successfully! The page will now reload.');
+            window.location.reload();
+        } catch (e) {
+            console.error('Import failed:', e);
+            alert('Failed to import database. Ensure it is a valid SQLite file.');
+        }
+    }
+};
+
+window.BackupDB = BackupDB;
+
