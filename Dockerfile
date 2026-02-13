@@ -4,11 +4,17 @@ WORKDIR /app
 
 # Install dependencies first (better layer caching)
 COPY server/package.json ./server/
-RUN cd server && npm install --omit=dev
+RUN cd server && npm install
 
 # Copy application files
 COPY server/ ./server/
 COPY public/ ./public/
+
+# Minify CSS and JS files
+RUN cd server && npm run build
+
+# Remove dev dependencies to reduce image size
+RUN cd server && npm prune --omit=dev
 
 # Create data directory for SQLite
 RUN mkdir -p data

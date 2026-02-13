@@ -5,14 +5,21 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "minify:css": "cleancss -o ../public/css/style.min.css ../public/css/style.css",
+    "minify:js": "terser ../public/js/api-client.js -o ../public/js/api-client.min.js -c -m && terser ../public/js/calendar-vue.js -o ../public/js/calendar-vue.min.js -c -m && terser ../public/js/eisenhower-vue.js -o ../public/js/eisenhower-vue.min.js -c -m && terser ../public/js/moscow-vue.js -o ../public/js/moscow-vue.min.js -c -m && terser ../public/js/journal-vue.js -o ../public/js/journal-vue.min.js -c -m && terser ../public/js/db.js -o ../public/js/db.min.js -c -m",
+    "minify": "npm run minify:css && npm run minify:js",
+    "build": "npm run minify"
   },
   "dependencies": {
+    "compression": "^1.7.4",
     "express": "^4.18.2",
     "sqlite3": "^5.1.6"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "clean-css-cli": "^5.6.3",
+    "nodemon": "^3.0.1",
+    "terser": "^5.31.0"
   },
   "engines": {
     "node": ">=18.0.0"

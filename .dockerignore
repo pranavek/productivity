@@ -1,7 +1,40 @@
-.git
+# Node modules (will be installed in container)
+node_modules/
+server/node_modules/
+
+# Git files
+.git/
 .gitignore
-node_modules
+
+# Documentation
 *.md
-data/*.db
+AGENTS.md
+CALENDAR_FEATURES.md
+IMPLEMENTATION_SUMMARY.md
+
+# Development files
+.vscode/
+.idea/
+
+# OS files
 .DS_Store
+Thumbs.db
+
+# Docker files (don't need in build context)
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Database files (will be mounted as volume)
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
 *.log
+npm-debug.log*
+
+# Environment files
+.env
+.env.local

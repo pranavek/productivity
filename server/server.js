@@ -1,4 +1,5 @@
 const express = require('express');
+const compression = require('compression');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
@@ -7,8 +8,23 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
+app.use(compression({
+    level: 6, // Compression level (0-9, default 6)
+    threshold: 1024, // Only compress responses larger than 1KB
+    filter: (req, res) => {
+        // Don't compress if client doesn't accept gzip
+        if (req.headers['x-no-compression']) {
+            return false;
+        }
+        // Use compression filter (compress everything except already compressed files)
+        return compression.filter(req, res);
+    }
+}));
 app.use(express.json({limit: '10mb'}));
-app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.static(path.join(__dirname, '../public'), {
+    maxAge: '1d', // Cache static assets for 1 day
+    etag: true // Enable ETag for caching
+}));
 
 // Database connection
 const dbPath = path.join(__dirname, '../data/productivity.db');
