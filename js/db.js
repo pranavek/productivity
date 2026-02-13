@@ -1,52 +1,61 @@
 /* eslint-disable no-console */
 const DB_NAME = '/productivity.sqlite3';
 
-let db = null;
-let sqlite3 = null;
+let worker = null;
+let initPromise = null;
+let messageId = 0;
+const pendingMessages = new Map();
 
 async function initDB() {
-    if (db) return db;
+    if (worker) return worker;
+    if (initPromise) return initPromise;
 
-    try {
-        if (!sqlite3) {
-            // sqlite3InitModule is defined by the sqlite3.js script
-            if (typeof sqlite3InitModule === 'undefined') {
-                throw new Error("sqlite3InitModule not found. Ensure sqlite3.js is loaded.");
+    initPromise = new Promise((resolve, reject) => {
+        worker = new Worker('js/db-worker.js');
+
+        worker.onmessage = (e) => {
+            const { id, type, result, error } = e.data;
+
+            if (type === 'ready') {
+                console.log('Main: Worker ready');
+                resolve(worker);
+                return;
             }
-            sqlite3 = await sqlite3InitModule({
-                print: console.log,
-                printErr: console.error,
-            });
-        }
 
-        const { oo1 } = sqlite3;
-
-        // Attempt to use persistent storage via OPFS
-        if (sqlite3.opfs) {
-            try {
-                db = new sqlite3.opfs.OpfsDb(DB_NAME);
-                console.log('SQLite: Using OPFS storage.');
-            } catch (e) {
-                console.error('SQLite: OPFS initialization failed.', e);
-                throw e;
+            if (type === 'error') {
+                console.error('Main: Worker error:', error);
+                reject(new Error(error));
+                return;
             }
-        } else {
-            const msg = "SQLite: OPFS not available in this environment.";
-            console.error(msg);
-            throw new Error(msg);
-        }
 
-        // Initialize Schema with JSON document storage pattern
-        db.exec([
-            "CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY AUTOINCREMENT, data TEXT);",
-            "CREATE TABLE IF NOT EXISTS journals (id TEXT PRIMARY KEY, data TEXT);",
-        ]);
+            const pending = pendingMessages.get(id);
+            if (pending) {
+                pendingMessages.delete(id);
+                if (error) {
+                    pending.reject(new Error(error));
+                } else {
+                    pending.resolve(result);
+                }
+            }
+        };
 
-        return db;
-    } catch (err) {
-        console.error('Failed to initialize SQLite:', err);
-        throw err;
-    }
+        worker.onerror = (err) => {
+            console.error('Main: Worker error:', err);
+            reject(err);
+        };
+    });
+
+    return initPromise;
+}
+
+// Helper to send messages to worker and get results
+function workerExec(method, ...args) {
+    return new Promise(async (resolve, reject) => {
+        await initDB();
+        const id = ++messageId;
+        pendingMessages.set(id, { resolve, reject });
+        worker.postMessage({ id, method, args });
+    });
 }
 
 /**
@@ -55,7 +64,7 @@ async function initDB() {
  */
 const TaskDB = {
     async add(task) {
-        const db = await initDB();
+        await initDB();
         // Exclude ID from the stored JSON to avoid confusion, 
         // effectively letting SQLite manage the ID. 
         // Or we can store the ID inside the JSON too? 
@@ -65,61 +74,48 @@ const TaskDB = {
 
         const dataStr = JSON.stringify(rest);
 
-        db.exec({
-            sql: 'INSERT INTO tasks (data) VALUES (?)',
-            bind: [dataStr]
-        });
+        await workerExec('exec', `INSERT INTO tasks (data) VALUES ('${dataStr.replace(/'/g, "''")}')`);
 
         // Retrieve the auto-generated ID
         // selectValue is a helper in oo1
-        const newId = db.selectValue('SELECT last_insert_rowid()');
+        const newId = await workerExec('selectValue', 'SELECT last_insert_rowid()');
         return newId;
     },
 
     async getAll() {
-        const db = await initDB();
-        const result = [];
-        db.exec({
-            sql: 'SELECT id, data FROM tasks',
-            callback: (row) => {
-                try {
-                    // row is [id, data]
-                    const [id, dataStr] = row;
-                    const obj = JSON.parse(dataStr);
-                    obj.id = id; // Ensure ID matches DB
-                    result.push(obj);
-                } catch (e) {
-                    console.error('Error parsing task row:', row, e);
-                }
+        await initDB();
+        const rows = await workerExec('selectArray', 'SELECT id, data FROM tasks');
+        return rows.map(([id, dataStr]) => {
+            try {
+                // row is [id, data]
+                const obj = JSON.parse(dataStr);
+                obj.id = id; // Ensure ID matches DB
+                return obj;
+            } catch (e) {
+                console.error('Error parsing task row:', id, e);
+                return null;
             }
-        });
-        return result;
+        }).filter(Boolean);
     },
 
     async update(task) {
-        const db = await initDB();
+        await initDB();
         const { id, ...rest } = task; // Separate ID
         if (!id) throw new Error("Task update failed: Missing ID");
 
         const dataStr = JSON.stringify(rest);
-        db.exec({
-            sql: 'UPDATE tasks SET data = ? WHERE id = ?',
-            bind: [dataStr, id]
-        });
+        await workerExec('exec', `UPDATE tasks SET data = '${dataStr.replace(/'/g, "''")}' WHERE id = ${id}`);
         return id;
     },
 
     async delete(id) {
-        const db = await initDB();
-        db.exec({
-            sql: 'DELETE FROM tasks WHERE id = ?',
-            bind: [id]
-        });
+        await initDB();
+        await workerExec('exec', `DELETE FROM tasks WHERE id = ${id}`);
     },
 
     async clearAll() {
-        const db = await initDB();
-        db.exec('DELETE FROM tasks');
+        await initDB();
+        await workerExec('exec', 'DELETE FROM tasks');
     }
 };
 
@@ -128,63 +124,48 @@ const TaskDB = {
  */
 const JournalDB = {
     async save(journal) {
-        const db = await initDB();
-        const { id, ...rest } = journal; // ID is the date string
+        await initDB();
+        const { id, ...rest } = journal;
         if (!id) throw new Error("Journal save failed: Missing ID");
 
         const dataStr = JSON.stringify(rest);
-
-        // UPSERT style: Insert or Replace
-        db.exec({
-            sql: 'INSERT OR REPLACE INTO journals (id, data) VALUES (?, ?)',
-            bind: [id, dataStr]
-        });
+        await workerExec('exec', `INSERT OR REPLACE INTO journals (id, data) VALUES ('${id}', '${dataStr.replace(/'/g, "''")}')`);
         return id;
     },
 
     async get(id) {
-        const db = await initDB();
-        let found = null;
-        db.exec({
-            sql: 'SELECT id, data FROM journals WHERE id = ?',
-            bind: [id],
-            callback: (row) => {
-                const [dbId, dataStr] = row;
-                try {
-                    const obj = JSON.parse(dataStr);
-                    obj.id = dbId;
-                    found = obj;
-                } catch (e) {
-                    console.error('Error parsing journal:', e);
-                }
-            }
-        });
-        return found; // Returns null if not found
+        await initDB();
+        const rows = await workerExec('selectArray', `SELECT id, data FROM journals WHERE id = '${id}'`);
+        if (rows.length === 0) return null;
+
+        const [dbId, dataStr] = rows[0];
+        try {
+            const obj = JSON.parse(dataStr);
+            obj.id = dbId;
+            return obj;
+        } catch (e) {
+            console.error('Error parsing journal:', e);
+            return null;
+        }
     },
 
     async getAll() {
-        const db = await initDB();
-        const result = [];
-        db.exec({
-            sql: 'SELECT id, data FROM journals',
-            callback: (row) => {
-                const [id, dataStr] = row;
-                try {
-                    const obj = JSON.parse(dataStr);
-                    obj.id = id;
-                    result.push(obj);
-                } catch (e) { }
+        await initDB();
+        const rows = await workerExec('selectArray', 'SELECT id, data FROM journals');
+        return rows.map(([id, dataStr]) => {
+            try {
+                const obj = JSON.parse(dataStr);
+                obj.id = id;
+                return obj;
+            } catch (e) {
+                return null;
             }
-        });
-        return result;
+        }).filter(Boolean);
     },
 
     async delete(id) {
-        const db = await initDB();
-        db.exec({
-            sql: 'DELETE FROM journals WHERE id = ?',
-            bind: [id]
-        });
+        await initDB();
+        await workerExec('exec', `DELETE FROM journals WHERE id = '${id}'`);
     }
 };
 
