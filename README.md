@@ -12,7 +12,7 @@ A collection of minimal productivity tools designed for focus and clarity.
 ## 🚀 Features
 
 - **Dark Mode First**: Sleek, glassmorphic UI designed for concentration.
-- **Persistence**: All tasks are saved locally in your browser (IndexedDB).
+- **Persistence**: All tasks are saved locally in your browser (IndexedDB). [Testing]
 - **Vue.js Powered**: Smooth, reactive interface for efficient task management.
 
 Try me out at https://pranavek.com/productivity
