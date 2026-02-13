@@ -20,6 +20,33 @@ Try me out at https://pranavek.com/productivity
 
 ## 📦 Deployment
 
+### Using Pre-built Docker Image
+
+Pull and run the latest image from GitHub Container Registry:
+
+```bash
+# Pull the latest image
+docker pull ghcr.io/YOUR_USERNAME/productivity:latest
+
+# Run the container
+docker run -d \
+  -p 9191:3000 \
+  -v $(pwd)/data:/app/data \
+  --name productivity-suite \
+  --restart unless-stopped \
+  ghcr.io/YOUR_USERNAME/productivity:latest
+
+# Access at http://localhost:9191
+```
+
+Or use with docker-compose by updating your `docker-compose.yml`:
+```yaml
+services:
+  productivity:
+    image: ghcr.io/YOUR_USERNAME/productivity:latest
+    # Remove the 'build' section when using pre-built image
+```
+
 ### Local Development
 
 1. Install dependencies:
@@ -44,7 +71,7 @@ Try me out at https://pranavek.com/productivity
    docker-compose up -d
    ```
 
-2. Access: http://localhost:8080
+2. Access: http://localhost:9191
 
 3. View logs:
    ```bash
