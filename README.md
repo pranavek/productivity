@@ -12,8 +12,21 @@ A collection of minimal productivity tools designed for focus and clarity.
 ## 🚀 Features
 
 - **Dark Mode First**: Sleek, glassmorphic UI designed for concentration.
-- **Persistence**: All tasks are saved locally in your browser (IndexedDB). [Testing]
+- **Persistence**: All tasks are saved locally in your browser using **SQLite WASM** with **OPFS** (Origin Private File System) for robust, high-performance storage.
 - **Vue.js Powered**: Smooth, reactive interface for efficient task management.
+
+## 💻 Running Locally
+
+To enable the advanced SQLite storage (OPFS), the application requires specific HTTP headers (`Cross-Origin-Opener-Policy` and `Cross-Origin-Embedder-Policy`).
+
+1.  **Start the local server**:
+    ```bash
+    python server.py
+    ```
+2.  **Open in Browser**:
+    Navigate to [http://localhost:8181](http://localhost:8181)
+
+*Note: Opening the HTML files directly (file://) will not work with the new database system.*
 
 Try me out at https://pranavek.com/productivity
 
