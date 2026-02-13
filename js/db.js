@@ -1,135 +1,189 @@
-const DB_NAME = 'ProductivityHubDB';
-const DB_VERSION = 1;
+/* eslint-disable no-console */
+const DB_NAME = '/productivity.sqlite3';
 
-/**
- * Initialize IndexedDB
- */
-function initDB() {
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, DB_VERSION);
+let db = null;
+let sqlite3 = null;
 
-        request.onupgradeneeded = (event) => {
-            const db = event.target.result;
-            if (!db.objectStoreNames.contains('tasks')) {
-                db.createObjectStore('tasks', { keyPath: 'id', autoIncrement: true });
+async function initDB() {
+    if (db) return db;
+
+    try {
+        if (!sqlite3) {
+            // sqlite3InitModule is defined by the sqlite3.js script
+            if (typeof sqlite3InitModule === 'undefined') {
+                throw new Error("sqlite3InitModule not found. Ensure sqlite3.js is loaded.");
             }
-            if (!db.objectStoreNames.contains('journals')) {
-                db.createObjectStore('journals', { keyPath: 'id' });
+            sqlite3 = await sqlite3InitModule({
+                print: console.log,
+                printErr: console.error,
+            });
+        }
+
+        const { oo1 } = sqlite3;
+
+        // Attempt to use persistent storage via OPFS
+        if (sqlite3.opfs) {
+            try {
+                db = new sqlite3.opfs.OpfsDb(DB_NAME);
+                console.log('SQLite: Using OPFS storage.');
+            } catch (e) {
+                console.error('SQLite: OPFS initialization failed.', e);
+                throw e;
             }
-        };
+        } else {
+            const msg = "SQLite: OPFS not available in this environment.";
+            console.error(msg);
+            throw new Error(msg);
+        }
 
-        request.onsuccess = (event) => {
-            resolve(event.target.result);
-        };
+        // Initialize Schema with JSON document storage pattern
+        db.exec([
+            "CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY AUTOINCREMENT, data TEXT);",
+            "CREATE TABLE IF NOT EXISTS journals (id TEXT PRIMARY KEY, data TEXT);",
+        ]);
 
-        request.onerror = (event) => {
-            reject('IndexedDB error: ' + event.target.errorCode);
-        };
-    });
+        return db;
+    } catch (err) {
+        console.error('Failed to initialize SQLite:', err);
+        throw err;
+    }
 }
 
 /**
- * Task Operations
+ * Task Operations using SQLite
+ * Stores task objects as JSON in 'data' column.
  */
 const TaskDB = {
     async add(task) {
         const db = await initDB();
-        return new Promise((resolve, reject) => {
-            const transaction = db.transaction(['tasks'], 'readwrite');
-            const store = transaction.objectStore('tasks');
-            const request = store.add(task);
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
+        // Exclude ID from the stored JSON to avoid confusion, 
+        // effectively letting SQLite manage the ID. 
+        // Or we can store the ID inside the JSON too? 
+        // IndexedDB assigns ID "on insert".
+        // Use copy to avoid mutating original
+        const { id, ...rest } = task;
+
+        const dataStr = JSON.stringify(rest);
+
+        db.exec({
+            sql: 'INSERT INTO tasks (data) VALUES (?)',
+            bind: [dataStr]
         });
+
+        // Retrieve the auto-generated ID
+        // selectValue is a helper in oo1
+        const newId = db.selectValue('SELECT last_insert_rowid()');
+        return newId;
     },
 
     async getAll() {
         const db = await initDB();
-        return new Promise((resolve, reject) => {
-            const transaction = db.transaction(['tasks'], 'readonly');
-            const store = transaction.objectStore('tasks');
-            const request = store.getAll();
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
+        const result = [];
+        db.exec({
+            sql: 'SELECT id, data FROM tasks',
+            callback: (row) => {
+                try {
+                    // row is [id, data]
+                    const [id, dataStr] = row;
+                    const obj = JSON.parse(dataStr);
+                    obj.id = id; // Ensure ID matches DB
+                    result.push(obj);
+                } catch (e) {
+                    console.error('Error parsing task row:', row, e);
+                }
+            }
         });
+        return result;
     },
 
     async update(task) {
         const db = await initDB();
-        return new Promise((resolve, reject) => {
-            const transaction = db.transaction(['tasks'], 'readwrite');
-            const store = transaction.objectStore('tasks');
-            const request = store.put(task);
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
+        const { id, ...rest } = task; // Separate ID
+        if (!id) throw new Error("Task update failed: Missing ID");
+
+        const dataStr = JSON.stringify(rest);
+        db.exec({
+            sql: 'UPDATE tasks SET data = ? WHERE id = ?',
+            bind: [dataStr, id]
         });
+        return id;
     },
 
     async delete(id) {
         const db = await initDB();
-        return new Promise((resolve, reject) => {
-            const transaction = db.transaction(['tasks'], 'readwrite');
-            const store = transaction.objectStore('tasks');
-            const request = store.delete(id);
-            request.onsuccess = () => resolve();
-            request.onerror = () => reject(request.error);
+        db.exec({
+            sql: 'DELETE FROM tasks WHERE id = ?',
+            bind: [id]
         });
     },
 
     async clearAll() {
         const db = await initDB();
-        return new Promise((resolve, reject) => {
-            const transaction = db.transaction(['tasks'], 'readwrite');
-            const store = transaction.objectStore('tasks');
-            const request = store.clear();
-            request.onsuccess = () => resolve();
-            request.onerror = () => reject(request.error);
-        });
+        db.exec('DELETE FROM tasks');
     }
 };
 
+/**
+ * Journal Operations using SQLite
+ */
 const JournalDB = {
     async save(journal) {
         const db = await initDB();
-        return new Promise((resolve, reject) => {
-            const transaction = db.transaction(['journals'], 'readwrite');
-            const store = transaction.objectStore('journals');
-            const request = store.put(journal);
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
+        const { id, ...rest } = journal; // ID is the date string
+        if (!id) throw new Error("Journal save failed: Missing ID");
+
+        const dataStr = JSON.stringify(rest);
+
+        // UPSERT style: Insert or Replace
+        db.exec({
+            sql: 'INSERT OR REPLACE INTO journals (id, data) VALUES (?, ?)',
+            bind: [id, dataStr]
         });
+        return id;
     },
 
     async get(id) {
         const db = await initDB();
-        return new Promise((resolve, reject) => {
-            const transaction = db.transaction(['journals'], 'readonly');
-            const store = transaction.objectStore('journals');
-            const request = store.get(id);
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
+        let found = null;
+        db.exec({
+            sql: 'SELECT id, data FROM journals WHERE id = ?',
+            bind: [id],
+            callback: (row) => {
+                const [dbId, dataStr] = row;
+                try {
+                    const obj = JSON.parse(dataStr);
+                    obj.id = dbId;
+                    found = obj;
+                } catch (e) {
+                    console.error('Error parsing journal:', e);
+                }
+            }
         });
+        return found; // Returns null if not found
     },
 
     async getAll() {
         const db = await initDB();
-        return new Promise((resolve, reject) => {
-            const transaction = db.transaction(['journals'], 'readonly');
-            const store = transaction.objectStore('journals');
-            const request = store.getAll();
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
+        const result = [];
+        db.exec({
+            sql: 'SELECT id, data FROM journals',
+            callback: (row) => {
+                const [id, dataStr] = row;
+                try {
+                    const obj = JSON.parse(dataStr);
+                    obj.id = id;
+                    result.push(obj);
+                } catch (e) { }
+            }
         });
+        return result;
     },
 
     async delete(id) {
         const db = await initDB();
-        return new Promise((resolve, reject) => {
-            const transaction = db.transaction(['journals'], 'readwrite');
-            const store = transaction.objectStore('journals');
-            const request = store.delete(id);
-            request.onsuccess = () => resolve();
-            request.onerror = () => reject(request.error);
+        db.exec({
+            sql: 'DELETE FROM journals WHERE id = ?',
+            bind: [id]
         });
     }
 };
