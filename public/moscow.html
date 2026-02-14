@@ -110,23 +110,6 @@
             <p><strong>Pro Tip:</strong> Keep your "Must Have" tasks below <strong>60%</strong> of total effort to
                 ensure project feasibility.</p>
         </div>
-
-        <div class="controls">
-            <button @click="showResetModal = true" class="reset-btn">Reset MoSCoW Data</button>
-        </div>
-
-        <!-- Modal for confirmation -->
-        <div class="modal-overlay" :style="{ display: showResetModal ? 'flex' : 'none' }">
-            <div class="modal">
-                <h3>Reset MoSCoW Data?</h3>
-                <p style="margin-top: 1rem; color: var(--text-muted);">This will permanently delete all tasks in the
-                    prioritizer. Eisenhower data will not be affected.</p>
-                <div class="modal-actions">
-                    <button @click="showResetModal = false" class="secondary-btn">Cancel</button>
-                    <button @click="resetData" class="reset-btn" style="padding: 0.5rem 1rem;">Yes, Reset</button>
-                </div>
-            </div>
-        </div>
     </div>
 
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
