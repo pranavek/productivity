@@ -776,7 +776,10 @@ createApp({
                     scales: {
                         y: {
                             beginAtZero: true,
-                            ticks: { color: 'var(--text-muted)' },
+                            ticks: {
+                                color: 'var(--text-muted)',
+                                stepSize: 1
+                            },
                             grid: { color: 'var(--border-color)' }
                         },
                         x: {
@@ -828,7 +831,10 @@ createApp({
                     scales: {
                         y: {
                             beginAtZero: true,
-                            ticks: { color: 'var(--text-muted)' },
+                            ticks: {
+                                color: 'var(--text-muted)',
+                                stepSize: 1
+                            },
                             grid: { color: 'var(--border-color)' }
                         },
                         x: {
