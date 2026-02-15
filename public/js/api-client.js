@@ -40,7 +40,10 @@ async function apiRequest(endpoint, options = {}) {
 }
 
 /**
- * Task Operations - Maintains same interface as IndexedDB TaskDB
+ * Task API Client
+ *
+ * Provides CRUD operations for tasks stored in server-side SQLite database.
+ * Communicates with Express REST API endpoints.
  */
 const TaskDB = {
     async add(task) {
@@ -83,7 +86,10 @@ const TaskDB = {
 };
 
 /**
- * Journal Operations - Maintains same interface as IndexedDB JournalDB
+ * Journal API Client
+ *
+ * Provides CRUD operations for journal entries stored in server-side SQLite database.
+ * Communicates with Express REST API endpoints.
  */
 const JournalDB = {
     async save(journal) {
