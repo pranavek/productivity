@@ -9,7 +9,7 @@
     "dev:build": "npm run build && npm run dev",
     "start:build": "npm run build && npm start",
     "minify:css": "cleancss -o ../public/css/style.min.css ../public/css/style.css",
-    "minify:js": "terser ../public/js/api-client.js -o ../public/js/api-client.min.js -c -m && terser ../public/js/calendar-vue.js -o ../public/js/calendar-vue.min.js -c -m && terser ../public/js/eisenhower-vue.js -o ../public/js/eisenhower-vue.min.js -c -m && terser ../public/js/moscow-vue.js -o ../public/js/moscow-vue.min.js -c -m && terser ../public/js/journal-vue.js -o ../public/js/journal-vue.min.js -c -m && terser ../public/js/db.js -o ../public/js/db.min.js -c -m",
+    "minify:js": "terser ../public/js/api-client.js -o ../public/js/api-client.min.js -c -m && terser ../public/js/calendar-vue.js -o ../public/js/calendar-vue.min.js -c -m && terser ../public/js/eisenhower-vue.js -o ../public/js/eisenhower-vue.min.js -c -m && terser ../public/js/moscow-vue.js -o ../public/js/moscow-vue.min.js -c -m && terser ../public/js/journal-vue.js -o ../public/js/journal-vue.min.js -c -m",
     "minify": "npm run minify:css && npm run minify:js",
     "build": "npm run minify",
     "watch:css": "nodemon --watch ../public/css/style.css --exec npm run minify:css",

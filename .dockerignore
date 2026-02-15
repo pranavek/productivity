@@ -8,9 +8,6 @@ server/node_modules/
 
 # Documentation
 *.md
-AGENTS.md
-CALENDAR_FEATURES.md
-IMPLEMENTATION_SUMMARY.md
 
 # Development files
 .vscode/
