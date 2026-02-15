@@ -280,19 +280,20 @@ createApp({
 
             for (let i = chartTimeRange.value; i >= 0; i--) {
                 const date = new Date(now - (i * 24 * 60 * 60 * 1000));
-                const dateMs = date.setHours(0, 0, 0, 0);
+                // Use end of day (23:59:59.999) for accurate counting
+                const dateEndMs = new Date(date).setHours(23, 59, 59, 999);
 
                 days.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
 
-                // Burndown: count tasks NOT completed by this date
+                // Burndown: count tasks NOT completed by end of this date
                 const remaining = tasksInRange.filter(t =>
-                    t.createdAt && t.createdAt <= dateMs &&
-                    (!t.completedAt || t.completedAt > dateMs)
+                    t.createdAt && t.createdAt <= dateEndMs &&
+                    (!t.completedAt || t.completedAt > dateEndMs)
                 ).length;
 
-                // Burnup: count tasks completed by this date
+                // Burnup: count tasks completed by end of this date
                 const completed = tasksInRange.filter(t =>
-                    t.completedAt && t.completedAt <= dateMs
+                    t.completedAt && t.completedAt <= dateEndMs
                 ).length;
 
                 burndownData.push(remaining);
