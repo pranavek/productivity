@@ -1764,3 +1764,106 @@ button.secondary-btn:hover {
         width: 100%;
     }
 }
+
+/* ===== CALENDAR EVENT INTEGRATION STYLES ===== */
+
+/* Calendar Event Indicators on Matrix Pages */
+.task-item.calendar-event {
+    background: rgba(59, 130, 246, 0.05);
+    border-left: 2px solid rgba(59, 130, 246, 0.3);
+}
+
+.calendar-badge {
+    font-size: 0.9rem;
+    margin-right: 0.5rem;
+    opacity: 0.8;
+}
+
+.date-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 0.375rem;
+    color: #60a5fa;
+    margin-left: 0.5rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.task-item.calendar-event:hover {
+    background: rgba(59, 130, 246, 0.1);
+    border-left-color: rgba(59, 130, 246, 0.5);
+}
+
+.task-item.calendar-event .task-text {
+    font-style: italic;
+    color: var(--text-main);
+}
+
+/* Global Navigation Dropdown */
+.app-nav {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    z-index: 1000;
+}
+
+.nav-dropdown {
+    position: relative;
+}
+
+.nav-select {
+    appearance: none;
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 0.75rem 2.5rem 0.75rem 1rem;
+    color: var(--text-main);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    outline: none;
+}
+
+.nav-select:hover {
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.nav-select:focus {
+    border-color: rgba(59, 130, 246, 0.8);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.nav-dropdown::after {
+    content: '▼';
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.nav-select option {
+    background: var(--secondary-bg);
+    color: var(--text-main);
+    padding: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .app-nav {
+        top: 1rem;
+        right: 1rem;
+    }
+
+    .nav-select {
+        padding: 0.6rem 2rem 0.6rem 0.8rem;
+        font-size: 0.85rem;
+    }
+}

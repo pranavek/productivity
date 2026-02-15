@@ -12,6 +12,18 @@
 </head>
 
 <body>
+    <!-- Global Navigation -->
+    <nav class="app-nav">
+        <div class="nav-dropdown">
+            <select class="nav-select" onchange="if(this.value) window.location.href=this.value;">
+                <option value="index.html">📅 Calendar</option>
+                <option value="eisenhower.html" selected>⚖️ Eisenhower</option>
+                <option value="moscow.html">🎯 MoSCoW</option>
+                <option value="journal.html">✍️ Journal</option>
+            </select>
+        </div>
+    </nav>
+
     <div class="bg-gradient"></div>
     <div class="blob"></div>
 
@@ -60,11 +72,18 @@
                 </div>
                 <div class="task-list">
                     <!-- Uncompleted Tasks -->
-                    <div v-for="task in getTasks(q.id, false)" :key="task.id" class="task-item">
+                    <div v-for="task in getTasks(q.id, false)" :key="task.id"
+                        :class="['task-item', { 'calendar-event': task.type === 'calendar' }]">
                         <input type="checkbox" class="task-checkbox" v-model="task.completed"
                             @change="updateTask(task)">
+                        <span v-if="task.type === 'calendar'" class="calendar-badge" :title="'Calendar event: ' + task.date">
+                            📅
+                        </span>
                         <span class="task-text">{{ task.text }}</span>
-                        <button class="delete-task" @click="deleteTask(task.id)" title="Delete Task">
+                        <span v-if="task.type === 'calendar' && task.date" class="date-badge">
+                            {{ formatDateShort(task.date) }}
+                        </span>
+                        <button v-if="task.type !== 'calendar'" class="delete-task" @click="deleteTask(task.id)" title="Delete Task">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="3 6 5 6 21 6"></polyline>
@@ -81,11 +100,18 @@
                     <div v-if="hasCompleted(q.id)" class="completed-separator">Completed</div>
 
                     <!-- Completed Tasks -->
-                    <div v-for="task in getTasks(q.id, true)" :key="task.id" class="task-item completed">
+                    <div v-for="task in getTasks(q.id, true)" :key="task.id"
+                        :class="['task-item', 'completed', { 'calendar-event': task.type === 'calendar' }]">
                         <input type="checkbox" class="task-checkbox" v-model="task.completed"
                             @change="updateTask(task)">
+                        <span v-if="task.type === 'calendar'" class="calendar-badge" :title="'Calendar event: ' + task.date">
+                            📅
+                        </span>
                         <span class="task-text">{{ task.text }}</span>
-                        <button class="delete-task" @click="deleteTask(task.id)" title="Delete Task">
+                        <span v-if="task.type === 'calendar' && task.date" class="date-badge">
+                            {{ formatDateShort(task.date) }}
+                        </span>
+                        <button v-if="task.type !== 'calendar'" class="delete-task" @click="deleteTask(task.id)" title="Delete Task">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="3 6 5 6 21 6"></polyline>

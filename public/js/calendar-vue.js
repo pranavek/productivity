@@ -346,7 +346,9 @@ createApp({
                     description: '',
                     completed: false,
                     type: 'calendar',
-                    createdAt: Date.now()
+                    createdAt: Date.now(),
+                    quadrant: null,
+                    priority: null
                 };
             }
             showEventModal.value = true;
@@ -388,7 +390,9 @@ createApp({
                 isMilestone: false,
                 category: null,
                 color: null,
-                description: ''
+                description: '',
+                quadrant: null,
+                priority: null
             };
 
             await TaskDB.add(task);
@@ -412,6 +416,9 @@ createApp({
         };
 
         const deleteTask = async (task) => {
+            if (!confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+                return;
+            }
             await TaskDB.delete(task.id);
             await loadTasks();
         };

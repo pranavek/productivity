@@ -12,6 +12,18 @@
 </head>
 
 <body>
+    <!-- Global Navigation -->
+    <nav class="app-nav">
+        <div class="nav-dropdown">
+            <select class="nav-select" onchange="if(this.value) window.location.href=this.value;">
+                <option value="index.html">📅 Calendar</option>
+                <option value="eisenhower.html">⚖️ Eisenhower</option>
+                <option value="moscow.html">🎯 MoSCoW</option>
+                <option value="journal.html" selected>✍️ Journal</option>
+            </select>
+        </div>
+    </nav>
+
     <div class="bg-gradient"></div>
     <div class="blob" style="background: #a855f7; opacity: 0.05;"></div>
 

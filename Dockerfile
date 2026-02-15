@@ -10,11 +10,12 @@ RUN cd server && npm install
 COPY server/ ./server/
 COPY public/ ./public/
 
-# Minify CSS and JS files
+# Minify CSS and JS files (for production builds without volumes)
 RUN cd server && npm run build
 
-# Remove dev dependencies to reduce image size
-RUN cd server && npm prune --omit=dev
+# Copy entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Create data directory for SQLite
 RUN mkdir -p data
@@ -26,5 +27,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD node -e "require('http').get('http://localhost:3000/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"
 
-# Start server
-CMD ["node", "server/server.js"]
+# Use entrypoint to rebuild assets on container start (useful with volumes)
+ENTRYPOINT ["docker-entrypoint.sh"]

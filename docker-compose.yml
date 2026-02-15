@@ -11,7 +11,8 @@ services:
     volumes:
       # Persist database on host machine
       - ./data:/app/data
-      # Development mounts (remove for production)
+      # Development mounts (uncomment for live code changes)
+      # WARNING: With volumes enabled, assets will be minified on EVERY container start
       # - ./public:/app/public
       # - ./server:/app/server
     environment:
