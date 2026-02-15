@@ -1,20 +1,21 @@
 # Productivity Suite
 
-A collection of minimal productivity tools designed for focus and clarity.
+A collection of minimal productivity tools designed for focus and clarity. Schedule events on a calendar while simultaneously viewing them through priority frameworks for a multi-dimensional view of your tasks.
 
 ## 🛠️ Tools
 
-- **[Eisenhower Matrix](eisenhower.html)**: Prioritize tasks by urgency and importance to focus on high-impact goals.
-- **[MoSCoW Prioritizer](moscow.html)**: Categorize tasks into Must, Should, Could, and Won't have to manage project scope effectively.
-- **[Todo Calendar](todo-calender.html)**: Visualize your month and schedule tasks directly onto a calendar to stay ahead of your deadlines.
+- **[Calendar](index.html)** *(Default Entry Point)*: Visualize your month and schedule tasks directly onto a calendar. Optionally classify events with Eisenhower quadrants or MoSCoW priorities for cross-tool visibility.
+- **[Eisenhower Matrix](eisenhower.html)**: Prioritize tasks by urgency and importance to focus on high-impact goals. Shows both native tasks and classified calendar events.
+- **[MoSCoW Prioritizer](moscow.html)**: Categorize tasks into Must, Should, Could, and Won't have to manage project scope effectively. Shows both native tasks and classified calendar events.
 - **[Daily Journal](journal.html)**: Capture your thoughts, track your growth, and find clarity with daily entries and history tracking.
 
 ## 🚀 Features
 
+- **Cross-Tool Integration**: Calendar events can be tagged with Eisenhower quadrants and/or MoSCoW priorities, automatically appearing on their respective matrix pages with visual distinction (📅 icon, date badges).
 - **Dark Mode First**: Sleek, glassmorphic UI designed for concentration.
 - **Persistence**: All tasks are saved in a server-side SQLite database for reliable, cross-device access.
 - **Vue.js Powered**: Smooth, reactive interface for efficient task management.
-- **Containerized**: Easy deployment with Docker for consistent environments.
+- **Containerized**: Easy deployment with Docker for consistent environments with automatic asset minification.
 
 Try me out at https://pranavek.com/productivity
 
@@ -51,7 +52,7 @@ services:
 
 1. Build and start:
    ```bash
-   docker-compose up -d
+   docker-compose up --build -d
    ```
 
 2. Access: http://localhost:9191
@@ -65,6 +66,8 @@ services:
    ```bash
    docker-compose down
    ```
+
+**Note**: The Docker container automatically minifies CSS and JavaScript files on startup via `docker-entrypoint.sh`, ensuring optimal performance even with volume mounts for development.
 
 ### Data Persistence
 
