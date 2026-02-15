@@ -14,10 +14,16 @@ createApp({
         const showToolbar = ref(true);
 
         // View and filter state
-        const viewMode = ref('month'); // 'month', 'week', 'agenda', 'timeline'
+        const viewMode = ref('month'); // 'month', 'week', 'agenda', 'timeline', 'table', 'board', 'list'
         const filterCategory = ref(null);
         const filterStatus = ref(null);
         const draggedTask = ref(null);
+        const draggedBoardTask = ref(null);
+
+        // Hover menu state
+        const hoveredTask = ref(null);
+        const showHoverMenu = ref(false);
+        const hoverMenuPosition = ref({ x: 0, y: 0 });
 
         // Constants
         const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -165,6 +171,15 @@ createApp({
                     grouped[event.date] = [];
                 }
                 grouped[event.date].push(event);
+            });
+            return grouped;
+        });
+
+        // Board view: Tasks grouped by status
+        const tasksByStatus = computed(() => {
+            const grouped = {};
+            statusOptions.forEach(status => {
+                grouped[status.value] = filteredTasks.value.filter(t => t.status === status.value);
             });
             return grouped;
         });
@@ -469,7 +484,158 @@ createApp({
             draggedTask.value = null;
         };
 
-        onMounted(loadTasks);
+        // Inline editing
+        const updateTaskText = async (task, event) => {
+            const newText = event.target.textContent.trim();
+            if (newText && newText !== task.text) {
+                task.text = newText;
+                await TaskDB.update(JSON.parse(JSON.stringify(task)));
+                await loadTasks();
+            } else if (!newText) {
+                // Revert if empty
+                event.target.textContent = task.text;
+            }
+        };
+
+        // Board view drag and drop
+        const onBoardDragStart = (event, task) => {
+            draggedBoardTask.value = task;
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', task.id.toString());
+        };
+
+        const onBoardDragOver = (event) => {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'move';
+        };
+
+        const onBoardDrop = async (event, targetStatus) => {
+            event.preventDefault();
+
+            if (!draggedBoardTask.value) return;
+
+            const task = JSON.parse(JSON.stringify(draggedBoardTask.value));
+            task.status = targetStatus;
+            task.completed = (targetStatus === 'completed');
+
+            await TaskDB.update(task);
+            await loadTasks();
+
+            draggedBoardTask.value = null;
+        };
+
+        const onBoardDragEnd = () => {
+            draggedBoardTask.value = null;
+        };
+
+        // Add task to board column
+        const addTaskToColumn = async (status) => {
+            const text = prompt('Enter task title:');
+            if (!text || !text.trim()) return;
+
+            const task = {
+                text: text.trim(),
+                date: new Date().toISOString().split('T')[0],
+                completed: (status === 'completed'),
+                status: status,
+                type: 'calendar',
+                createdAt: Date.now(),
+                isMilestone: false,
+                category: null,
+                color: null,
+                description: '',
+                quadrant: null,
+                priority: null
+            };
+
+            await TaskDB.add(task);
+            await loadTasks();
+        };
+
+        // Hover menu functionality
+        const showTaskMenu = (event, task) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            hoveredTask.value = task;
+
+            // Position menu near the click/hover point
+            const rect = event.target.getBoundingClientRect();
+            hoverMenuPosition.value = {
+                x: event.clientX,
+                y: event.clientY
+            };
+
+            showHoverMenu.value = true;
+        };
+
+        const hideTaskMenu = () => {
+            showHoverMenu.value = false;
+            hoveredTask.value = null;
+        };
+
+        const duplicateTask = async () => {
+            if (!hoveredTask.value) return;
+
+            const task = JSON.parse(JSON.stringify(hoveredTask.value));
+            delete task.id;
+            task.text = task.text + ' (copy)';
+            task.createdAt = Date.now();
+
+            await TaskDB.add(task);
+            await loadTasks();
+            hideTaskMenu();
+        };
+
+        const moveTaskToDate = async () => {
+            if (!hoveredTask.value) return;
+
+            const newDate = prompt('Enter new date (YYYY-MM-DD):', hoveredTask.value.date);
+            if (!newDate || newDate === hoveredTask.value.date) {
+                hideTaskMenu();
+                return;
+            }
+
+            const task = JSON.parse(JSON.stringify(hoveredTask.value));
+            task.date = newDate;
+
+            await TaskDB.update(task);
+            await loadTasks();
+            hideTaskMenu();
+        };
+
+        const toggleMilestone = async () => {
+            if (!hoveredTask.value) return;
+
+            const task = JSON.parse(JSON.stringify(hoveredTask.value));
+            task.isMilestone = !task.isMilestone;
+
+            await TaskDB.update(task);
+            await loadTasks();
+            hideTaskMenu();
+        };
+
+        const deleteTaskFromMenu = async () => {
+            if (!hoveredTask.value) return;
+
+            if (confirm('Are you sure you want to delete this event?')) {
+                await TaskDB.delete(hoveredTask.value.id);
+                await loadTasks();
+            }
+            hideTaskMenu();
+        };
+
+        // Click outside to close hover menu
+        const handleClickOutside = (event) => {
+            if (showHoverMenu.value && !event.target.closest('.hover-menu')) {
+                hideTaskMenu();
+            }
+        };
+
+        onMounted(() => {
+            loadTasks();
+            document.addEventListener('click', handleClickOutside);
+        });
 
         return {
             // State
@@ -486,6 +652,10 @@ createApp({
             filterCategory,
             filterStatus,
             draggedTask,
+            draggedBoardTask,
+            hoveredTask,
+            showHoverMenu,
+            hoverMenuPosition,
 
             // Constants
             daysOfWeek,
@@ -501,6 +671,7 @@ createApp({
             groupedAgendaEvents,
             calendarSummary,
             periodLabel,
+            tasksByStatus,
 
             // Methods
             loadTasks,
@@ -526,7 +697,19 @@ createApp({
             onDragStart,
             onDragOver,
             onDrop,
-            onDragEnd
+            onDragEnd,
+            updateTaskText,
+            onBoardDragStart,
+            onBoardDragOver,
+            onBoardDrop,
+            onBoardDragEnd,
+            addTaskToColumn,
+            showTaskMenu,
+            hideTaskMenu,
+            duplicateTask,
+            moveTaskToDate,
+            toggleMilestone,
+            deleteTaskFromMenu
         };
     }
 }).mount('#app');

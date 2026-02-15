@@ -1,29 +1,38 @@
 :root {
-    --primary-bg: #0f172a;
-    --secondary-bg: #1e293b;
-    --glass-bg: rgba(30, 41, 59, 0.7);
-    --border-color: rgba(255, 255, 255, 0.1);
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
+    /* Notion-Style Color Palette */
+    --primary-bg: #191919;
+    --secondary-bg: #2F3438;
+    --sidebar-bg: #252525;
+    --hover-bg: #37352F;
+    --border-color: #373737;
+    --text-main: #FFFFFF;
+    --text-muted: #9B9A97;
 
-    /* Quadrant Colors */
-    --q1-color: #ef4444;
-    /* Urgent & Important - Do */
-    --q2-color: #3b82f6;
-    /* Not Urgent & Important - Schedule */
-    --q3-color: #f59e0b;
-    /* Urgent & Not Important - Delegate */
-    --q4-color: #64748b;
-    /* Not Urgent & Not Important - Delete */
+    /* Shadows - Subtle, not glowy */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.15);
 
-    --accent-glow: rgba(59, 130, 246, 0.5);
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Border Radius - Consistent 8px */
+    --radius: 8px;
+
+    /* Notion Blue for accents */
+    --accent-blue: #2383E2;
+    --accent-blue-hover: #1E6FBA;
+
+    /* Quadrant Colors - Adjusted for flat design */
+    --q1-color: #EB5757;
+    --q2-color: #2F80ED;
+    --q3-color: #F2994A;
+    --q4-color: #828282;
 
     /* MoSCoW Colors */
-    --must-color: #10b981;
-    --should-color: #f59e0b;
-    --could-color: #0ea5e9;
-    --wont-color: #f43f5e;
+    --must-color: #27AE60;
+    --should-color: #F2994A;
+    --could-color: #2F80ED;
+    --wont-color: #EB5757;
+
+    /* Fast transitions */
+    --transition: all 0.15s ease;
 }
 
 [v-cloak] {
@@ -40,83 +49,125 @@ body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     background-color: var(--primary-bg);
     color: var(--text-main);
-    line-height: 1.5;
+    line-height: 1.6;
     min-height: 100vh;
     overflow-x: hidden;
+    margin: 0;
+    padding: 0;
 }
 
-/* Background Decoration */
-.bg-gradient {
-    position: fixed;
-    top: 0;
-    left: 0;
+/* Notion-Style Layout */
+.notion-main {
+    min-height: 100vh;
+    background: var(--primary-bg);
+    padding: 3rem 4rem;
+    max-width: 1400px;
     width: 100%;
-    height: 100%;
-    background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%);
-    z-index: -1;
+    margin: 0 auto;
+    box-sizing: border-box;
 }
 
-.blob {
-    position: fixed;
-    width: 500px;
-    height: 500px;
-    background: var(--accent-glow);
-    filter: blur(80px);
-    border-radius: 50%;
-    z-index: -1;
-    opacity: 0.1;
-    animation: move 20s infinite alternate;
+/* Page Header with Navigation Dropdown */
+.page-header {
+    margin-bottom: 2rem;
 }
 
-@keyframes move {
-    from {
-        transform: translate(-10%, -10%);
-    }
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
 
-    to {
-        transform: translate(10%, 10%);
-    }
+.header-content > div:first-child {
+    flex: 1;
+    min-width: 0;
+}
+
+.header-content h1 {
+    margin: 0 0 0.5rem 0;
+}
+
+.header-content .subtitle {
+    margin: 0;
+}
+
+.nav-dropdown {
+    flex-shrink: 0;
+    align-self: flex-start;
+}
+
+.page-selector {
+    background: var(--secondary-bg);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 0.5rem 1rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+    min-width: 200px;
+}
+
+.page-selector:hover {
+    background: var(--hover-bg);
+    border-color: var(--accent-blue);
+}
+
+.page-selector:focus {
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 3px rgba(35, 131, 226, 0.1);
+}
+
+.page-selector option {
+    background: var(--secondary-bg);
+    color: var(--text-main);
+    padding: 0.5rem;
 }
 
 .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
 }
 
 header {
-    text-align: center;
-    margin-bottom: 3rem;
+    text-align: left;
+    margin-bottom: 2rem;
 }
 
 h1 {
-    font-size: 3rem;
-    font-weight: 800;
-    background: linear-gradient(to right, #60a5fa, #a855f7);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--text-main);
     margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
 }
 
 p.subtitle {
     color: var(--text-muted);
-    font-size: 1.1rem;
+    font-size: 14px;
+    margin: 0;
 }
 
-/* Input Area */
+/* Input Area - Notion Style */
 .input-section {
-    background: var(--glass-bg);
-    backdrop-filter: blur(12px);
+    background: var(--secondary-bg);
     border: 1px solid var(--border-color);
-    border-radius: 20px;
-    padding: 2rem;
-    margin-bottom: 3rem;
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
     display: flex;
     gap: 1rem;
     flex-wrap: wrap;
     align-items: center;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-sm);
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .input-group {
@@ -125,41 +176,44 @@ p.subtitle {
 }
 
 input[type="text"],
+input[type="date"],
 select {
     width: 100%;
-    padding: 0.75rem 1rem;
-    background: rgba(15, 23, 42, 0.5);
+    padding: 0.5rem 0.75rem;
+    background: var(--primary-bg);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
+    border-radius: var(--radius);
     color: var(--text-main);
-    font-size: 1rem;
+    font-size: 14px;
     outline: none;
     transition: var(--transition);
+    font-family: 'Inter', sans-serif;
 }
 
 input[type="text"]:focus,
+input[type="date"]:focus,
 select:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 2px rgba(35, 131, 226, 0.15);
 }
 
 button.primary-btn {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    background: var(--accent-blue);
     color: white;
     border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 12px;
-    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    font-weight: 500;
+    font-size: 14px;
     cursor: pointer;
     transition: var(--transition);
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 0.5rem;
 }
 
 button.primary-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+    background: var(--accent-blue-hover);
 }
 
 button.secondary-btn {
@@ -167,13 +221,14 @@ button.secondary-btn {
     border: 1px solid var(--border-color);
     color: var(--text-muted);
     padding: 0.5rem 1rem;
-    border-radius: 10px;
+    border-radius: var(--radius);
+    font-size: 14px;
     cursor: pointer;
     transition: var(--transition);
 }
 
 button.secondary-btn:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--hover-bg);
     color: var(--text-main);
 }
 
@@ -187,6 +242,8 @@ button.secondary-btn:hover {
     min-height: 800px;
     position: relative;
     padding-top: 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .columns-container {
@@ -263,18 +320,17 @@ button.secondary-btn:hover {
 }
 
 .quadrant {
-    background: var(--glass-bg);
-    backdrop-filter: blur(8px);
+    background: var(--secondary-bg);
     border: 1px solid var(--border-color);
-    border-radius: 20px;
-    padding: 1.5rem;
+    border-radius: var(--radius);
+    padding: 1.25rem;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.75rem;
     min-height: 150px;
     transition: var(--transition);
     position: relative;
-    overflow: hidden;
+    box-shadow: var(--shadow-sm);
 }
 
 .quadrant::before {
@@ -339,20 +395,8 @@ button.secondary-btn:hover {
     color: var(--text-muted);
 }
 
-.quadrant.q1:not(:empty) {
-    box-shadow: 0 0 20px rgba(239, 68, 68, 0.05);
-}
-
-.quadrant.q2:not(:empty) {
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.05);
-}
-
-.quadrant.q3:not(:empty) {
-    box-shadow: 0 0 20px rgba(245, 158, 11, 0.05);
-}
-
-.quadrant.q4:not(:empty) {
-    box-shadow: 0 0 20px rgba(100, 116, 139, 0.05);
+.quadrant:hover {
+    border-color: var(--hover-bg);
 }
 
 /* Task List */
@@ -365,20 +409,20 @@ button.secondary-btn:hover {
 }
 
 .task-item {
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--primary-bg);
     border: 1px solid var(--border-color);
-    padding: 0.75rem 1rem;
-    border-radius: 12px;
+    padding: 0.625rem 0.875rem;
+    border-radius: var(--radius);
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    animation: fadeIn 0.3s ease-out;
+    animation: fadeIn 0.2s ease-out;
     transition: var(--transition);
+    font-size: 14px;
 }
 
 .task-item:hover {
-    background: rgba(255, 255, 255, 0.06);
-    transform: translateX(4px);
+    background: var(--hover-bg);
 }
 
 .task-item.completed {
@@ -459,19 +503,20 @@ button.secondary-btn:hover {
 }
 
 .reset-btn {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-    border: 1px solid rgba(239, 68, 68, 0.2);
-    padding: 0.75rem 1.5rem;
-    border-radius: 12px;
+    background: transparent;
+    color: #EB5757;
+    border: 1px solid var(--border-color);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
     cursor: pointer;
-    font-weight: 600;
+    font-weight: 500;
+    font-size: 14px;
     transition: var(--transition);
 }
 
 .reset-btn:hover {
-    background: #ef4444;
-    color: white;
+    background: rgba(235, 87, 87, 0.1);
+    border-color: #EB5757;
 }
 
 @keyframes fadeIn {
@@ -617,9 +662,8 @@ button.secondary-btn:hover {
     gap: 1px;
     background: var(--border-color);
     border: 1px solid var(--border-color);
-    border-radius: 20px;
+    border-radius: var(--radius);
     overflow: hidden;
-    background: var(--glass-bg);
 }
 
 .calendar-day-header {
@@ -635,7 +679,7 @@ button.secondary-btn:hover {
 
 .calendar-day {
     min-height: 120px;
-    background: var(--glass-bg);
+    background: var(--secondary-bg);
     padding: 0.5rem;
     display: flex;
     flex-direction: column;
@@ -644,7 +688,8 @@ button.secondary-btn:hover {
 }
 
 .calendar-day.today {
-    background: rgba(59, 130, 246, 0.1);
+    background: var(--hover-bg);
+    border: 1px solid var(--accent-blue);
 }
 
 .calendar-day.other-month {
@@ -671,15 +716,15 @@ button.secondary-btn:hover {
 }
 
 .cal-task-item {
-    font-size: 0.75rem;
+    font-size: 12px;
     padding: 0.25rem 0.5rem;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 4px;
+    background: var(--primary-bg);
+    border-radius: var(--radius);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     cursor: pointer;
-    border-left: 3px solid #3b82f6;
+    border-left: 3px solid var(--accent-blue);
     transition: var(--transition);
     position: relative;
     display: flex;
@@ -688,8 +733,7 @@ button.secondary-btn:hover {
 }
 
 .cal-task-item:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: translateX(2px);
+    background: var(--hover-bg);
 }
 
 .delete-cal-task {
@@ -743,6 +787,421 @@ button.secondary-btn:hover {
     color: var(--text-main);
 }
 
+/* ===== NOTION-STYLE SIDEBAR ===== */
+
+.sidebar-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sidebar-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.sidebar-toggle {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: var(--radius);
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar-toggle:hover {
+    background: var(--hover-bg);
+    color: var(--text-main);
+}
+
+.sidebar-nav {
+    flex: 1;
+    padding: 0.5rem 0;
+    overflow-y: auto;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    padding: 0.375rem 0.75rem;
+    margin: 2px 8px;
+    border-radius: var(--radius);
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: var(--transition);
+    font-size: 14px;
+}
+
+.nav-item:hover {
+    background: var(--hover-bg);
+    color: var(--text-main);
+}
+
+.nav-item.active {
+    background: var(--hover-bg);
+    color: var(--text-main);
+}
+
+.nav-icon {
+    margin-right: 0.5rem;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.nav-label {
+    flex: 1;
+}
+
+.nav-section {
+    margin: 0.5rem 0;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    padding: 0.375rem 0.75rem;
+    margin: 2px 8px;
+    cursor: pointer;
+    border-radius: var(--radius);
+    transition: var(--transition);
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.section-header:hover {
+    background: var(--hover-bg);
+}
+
+.section-icon {
+    margin-right: 0.5rem;
+    font-size: 16px;
+}
+
+.section-label {
+    flex: 1;
+}
+
+.section-toggle {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: transform 0.2s;
+    padding: 0;
+    font-size: 12px;
+}
+
+.section-toggle.expanded {
+    transform: rotate(180deg);
+}
+
+.section-content {
+    padding-left: 1.5rem;
+    max-height: 500px;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.section-content.collapsed {
+    max-height: 0;
+}
+
+.sidebar-footer {
+    padding: 1rem;
+    border-top: 1px solid var(--border-color);
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.task-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+/* Mobile hamburger menu */
+.mobile-menu-toggle {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 101;
+    background: var(--secondary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 0.5rem;
+    cursor: pointer;
+    display: none;
+}
+
+/* ===== DATABASE VIEWS ===== */
+
+.view-controls {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+/* Table View */
+.table-view {
+    width: 100%;
+}
+
+.notion-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--secondary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+.notion-table th {
+    background: var(--primary-bg);
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.table-row {
+    transition: background 0.15s;
+}
+
+.table-row:hover {
+    background: var(--hover-bg);
+}
+
+.table-row td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 14px;
+    vertical-align: middle;
+}
+
+.table-row:last-child td {
+    border-bottom: none;
+}
+
+/* Inline editing */
+[contenteditable] {
+    outline: none;
+    border-radius: 4px;
+    padding: 2px 4px;
+    transition: background 0.15s;
+    min-width: 100px;
+}
+
+[contenteditable]:hover {
+    background: var(--hover-bg);
+}
+
+[contenteditable]:focus {
+    background: var(--primary-bg);
+    box-shadow: 0 0 0 2px rgba(35, 131, 226, 0.3);
+}
+
+/* Board View (Kanban) */
+.board-view {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1rem;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.board-column {
+    background: var(--secondary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    min-height: 500px;
+    min-width: 200px;
+}
+
+.column-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.column-header h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.count {
+    font-size: 12px;
+    color: var(--text-muted);
+    background: var(--hover-bg);
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+.column-content {
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+.board-card {
+    background: var(--primary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 0.75rem;
+    cursor: grab;
+    transition: all 0.15s;
+}
+
+.board-card:active {
+    cursor: grabbing;
+}
+
+.board-card:hover {
+    border-color: var(--accent-blue);
+    box-shadow: var(--shadow-md);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.card-delete {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    opacity: 0;
+    transition: opacity 0.15s;
+    padding: 0;
+}
+
+.board-card:hover .card-delete {
+    opacity: 1;
+}
+
+.card-delete:hover {
+    color: #EB5757;
+}
+
+.card-title {
+    font-size: 14px;
+    margin-bottom: 0.5rem;
+    min-height: 20px;
+}
+
+.card-meta {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    font-size: 12px;
+}
+
+.card-date,
+.card-category {
+    background: var(--hover-bg);
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: var(--text-muted);
+}
+
+.add-card-btn {
+    background: none;
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius);
+    padding: 0.5rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 14px;
+}
+
+.add-card-btn:hover {
+    background: var(--hover-bg);
+    border-color: var(--accent-blue);
+    color: var(--text-main);
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.15s;
+    font-size: 16px;
+}
+
+.action-btn:hover {
+    background: var(--primary-bg);
+}
+
+/* Hover Menu */
+.hover-menu {
+    position: fixed;
+    background: var(--secondary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    padding: 0.25rem;
+    z-index: 1000;
+    min-width: 160px;
+}
+
+.menu-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: none;
+    border: none;
+    border-radius: 4px;
+    color: var(--text-main);
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.menu-btn:hover {
+    background: var(--hover-bg);
+}
+
+.menu-btn.delete {
+    color: #EB5757;
+}
+
+.menu-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 0.25rem 0;
+}
+
 /* Responsive */
 @media (max-width: 992px) {
 
@@ -761,6 +1220,25 @@ button.secondary-btn:hover {
     }
 }
 
+@media (max-width: 768px) {
+    .notion-main {
+        padding: 2rem 1.5rem;
+    }
+
+    .header-content {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .page-selector {
+        width: 100%;
+    }
+
+    .board-view {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Journal Specific Styles */
 .journal-layout {
     display: grid;
@@ -770,14 +1248,15 @@ button.secondary-btn:hover {
 }
 
 .journal-sidebar {
-    background: var(--glass-bg);
+    background: var(--secondary-bg);
     border: 1px solid var(--border-color);
-    border-radius: 24px;
-    padding: 2rem;
+    border-radius: var(--radius);
+    padding: 1.5rem;
     height: fit-content;
     max-height: 80vh;
     display: flex;
     flex-direction: column;
+    box-shadow: var(--shadow-sm);
 }
 
 .sidebar-title {
@@ -797,22 +1276,21 @@ button.secondary-btn:hover {
 }
 
 .history-item {
-    padding: 1rem;
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.03);
+    padding: 0.75rem;
+    border-radius: var(--radius);
+    background: var(--primary-bg);
     border: 1px solid transparent;
     cursor: pointer;
     transition: var(--transition);
 }
 
 .history-item:hover {
-    background: rgba(255, 255, 255, 0.07);
-    transform: translateX(4px);
+    background: var(--hover-bg);
 }
 
 .history-item.active {
-    background: rgba(59, 130, 246, 0.15);
-    border-color: rgba(59, 130, 246, 0.4);
+    background: var(--hover-bg);
+    border-color: var(--accent-blue);
 }
 
 .history-date {
@@ -830,15 +1308,14 @@ button.secondary-btn:hover {
 }
 
 .journal-main {
-    background: var(--glass-bg);
+    background: var(--secondary-bg);
     border: 1px solid var(--border-color);
-    border-radius: 32px;
-    padding: 3rem;
+    border-radius: var(--radius);
+    padding: 2rem;
     display: flex;
     flex-direction: column;
-    gap: 2rem;
-    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(20px);
+    gap: 1.5rem;
+    box-shadow: var(--shadow-sm);
 }
 
 .journal-top-bar {
@@ -855,12 +1332,12 @@ button.secondary-btn:hover {
 
 .journal-editor {
     flex: 1;
-    background: rgba(15, 23, 42, 0.4);
+    background: var(--primary-bg);
     border: 1px solid var(--border-color);
-    border-radius: 20px;
-    padding: 2rem;
+    border-radius: var(--radius);
+    padding: 1.5rem;
     color: var(--text-main);
-    font-size: 1.15rem;
+    font-size: 15px;
     line-height: 1.7;
     resize: none;
     outline: none;
@@ -870,9 +1347,8 @@ button.secondary-btn:hover {
 }
 
 .journal-editor:focus {
-    border-color: #3b82f6;
-    background: rgba(15, 23, 42, 0.6);
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 2px rgba(35, 131, 226, 0.15);
 }
 
 .save-indicator {
@@ -895,13 +1371,13 @@ button.secondary-btn:hover {
 .calendar-toolbar {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-    padding: 2rem;
-    background: var(--glass-bg);
-    backdrop-filter: blur(12px);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    background: var(--secondary-bg);
     border: 1px solid var(--border-color);
-    border-radius: 20px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
 }
 
 .view-mode-selector {
@@ -914,23 +1390,23 @@ button.secondary-btn:hover {
     background: transparent;
     border: 1px solid var(--border-color);
     color: var(--text-muted);
-    padding: 0.5rem 1.5rem;
-    border-radius: 10px;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
     cursor: pointer;
     transition: var(--transition);
-    font-weight: 600;
-    font-size: 0.9rem;
+    font-weight: 500;
+    font-size: 14px;
 }
 
 .view-btn:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--hover-bg);
     color: var(--text-main);
 }
 
 .view-btn.active {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    background: var(--accent-blue);
     color: white;
-    border-color: transparent;
+    border-color: var(--accent-blue);
 }
 
 .calendar-actions {
@@ -1082,11 +1558,11 @@ button.secondary-btn:hover {
 
 /* Week View */
 .week-view {
-    background: var(--glass-bg);
-    backdrop-filter: blur(8px);
+    background: var(--secondary-bg);
     border: 1px solid var(--border-color);
-    border-radius: 20px;
+    border-radius: var(--radius);
     overflow: hidden;
+    box-shadow: var(--shadow-sm);
 }
 
 .week-grid {
@@ -1182,12 +1658,12 @@ button.secondary-btn:hover {
 
 /* Agenda View */
 .agenda-view {
-    background: var(--glass-bg);
-    backdrop-filter: blur(8px);
+    background: var(--secondary-bg);
     border: 1px solid var(--border-color);
-    border-radius: 20px;
-    padding: 2rem;
+    border-radius: var(--radius);
+    padding: 1.5rem;
     min-height: 600px;
+    box-shadow: var(--shadow-sm);
 }
 
 .agenda-list {
@@ -1284,12 +1760,12 @@ button.secondary-btn:hover {
 
 /* Timeline View */
 .timeline-view {
-    background: var(--glass-bg);
-    backdrop-filter: blur(8px);
+    background: var(--secondary-bg);
     border: 1px solid var(--border-color);
-    border-radius: 20px;
-    padding: 2rem;
+    border-radius: var(--radius);
+    padding: 1.5rem;
     min-height: 600px;
+    box-shadow: var(--shadow-sm);
 }
 
 .timeline-container {
@@ -1840,7 +2316,6 @@ button.secondary-btn:hover {
 }
 
 .nav-dropdown::after {
-    content: '▼';
     position: absolute;
     right: 1rem;
     top: 50%;

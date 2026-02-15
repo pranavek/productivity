@@ -12,37 +12,35 @@
 </head>
 
 <body>
-    <!-- Global Navigation -->
-    <nav class="app-nav">
-        <div class="nav-dropdown">
-            <select class="nav-select" onchange="if(this.value) window.location.href=this.value;">
-                <option value="index.html">📅 Calendar</option>
-                <option value="eisenhower.html">⚖️ Eisenhower</option>
-                <option value="moscow.html" selected>🎯 MoSCoW</option>
-                <option value="journal.html">✍️ Journal</option>
-            </select>
-        </div>
-    </nav>
-
-    <div class="bg-gradient"></div>
-    <div class="blob" style="background: var(--must-color); opacity: 0.05;"></div>
-
-    <div class="container" id="app" v-cloak>
-        <header>
-            <h1>MoSCoW Prioritizer</h1>
-            <p class="subtitle">Categorize tasks into Must, Should, Could, and Won't have.</p>
-
-            <div class="must-ratio-container" style="max-width: 400px; margin: 1.5rem auto 0;">
-                <div class="must-ratio-label">
-                    <span>Must-Have Ratio</span>
-                    <span>{{ mustRatio }}%</span>
+    <div id="app" v-cloak>
+        <main class="notion-main">
+        <header class="page-header">
+            <div class="header-content">
+                <div>
+                    <h1>🏗️ MoSCoW Method</h1>
+                    <p class="subtitle">Prioritize: Must, Should, Could, Won't have</p>
                 </div>
-                <div class="must-ratio-bar">
-                    <div class="must-ratio-fill" :style="{ width: mustRatio + '%' }"
-                        :class="{ warning: mustRatio > 60 }"></div>
+                <div class="nav-dropdown">
+                    <select class="page-selector" onchange="if(this.value) window.location.href=this.value">
+                        <option value="/index.html">📅 Calendar</option>
+                        <option value="/eisenhower.html">🎯 Eisenhower Matrix</option>
+                        <option value="" selected>🏗️ MoSCoW Method</option>
+                        <option value="/journal.html">📝 Journal</option>
+                    </select>
                 </div>
             </div>
         </header>
+
+        <div class="must-ratio-container" style="max-width: 400px; margin: 1.5rem auto 0;">
+            <div class="must-ratio-label">
+                <span>Must-Have Ratio</span>
+                <span>{{ mustRatio }}%</span>
+            </div>
+            <div class="must-ratio-bar">
+                <div class="must-ratio-fill" :style="{ width: mustRatio + '%' }"
+                    :class="{ warning: mustRatio > 60 }"></div>
+            </div>
+        </div>
 
         <section class="input-section">
             <div class="input-group">
@@ -136,6 +134,7 @@
             <p><strong>Pro Tip:</strong> Keep your "Must Have" tasks below <strong>60%</strong> of total effort to
                 ensure project feasibility.</p>
         </div>
+        </main>
     </div>
 
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>

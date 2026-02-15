@@ -13,25 +13,23 @@
 </head>
 
 <body>
-    <!-- Global Navigation -->
-    <nav class="app-nav">
-        <div class="nav-dropdown">
-            <select class="nav-select" onchange="if(this.value) window.location.href=this.value;">
-                <option value="index.html" selected>📅 Calendar</option>
-                <option value="eisenhower.html">⚖️ Eisenhower</option>
-                <option value="moscow.html">🎯 MoSCoW</option>
-                <option value="journal.html">✍️ Journal</option>
-            </select>
-        </div>
-    </nav>
-
-    <div class="bg-gradient"></div>
-    <div class="blob" style="background: #3b82f6; opacity: 0.05;"></div>
-
-    <div class="container" id="app" v-cloak style="max-width: 1400px;">
-        <header>
-            <h1>Todo Calendar</h1>
-            <p class="subtitle">Visualize your events, track milestones, and stay ahead of deadlines.</p>
+    <div id="app" v-cloak>
+        <main class="notion-main">
+        <header class="page-header">
+            <div class="header-content">
+                <div>
+                    <h1>📅 Calendar</h1>
+                    <p class="subtitle">Visualize events and track milestones</p>
+                </div>
+                <div class="nav-dropdown">
+                    <select class="page-selector" onchange="if(this.value) window.location.href=this.value">
+                        <option value="">📅 Calendar</option>
+                        <option value="/eisenhower.html">🎯 Eisenhower Matrix</option>
+                        <option value="/moscow.html">🏗️ MoSCoW Method</option>
+                        <option value="/journal.html">📝 Journal</option>
+                    </select>
+                </div>
+            </div>
         </header>
 
         <!-- Calendar Toolbar -->
@@ -52,6 +50,8 @@
                 <button @click="viewMode = 'week'" :class="['view-btn', {active: viewMode === 'week'}]">Week</button>
                 <button @click="viewMode = 'agenda'" :class="['view-btn', {active: viewMode === 'agenda'}]">Agenda</button>
                 <button @click="viewMode = 'timeline'" :class="['view-btn', {active: viewMode === 'timeline'}]">Timeline</button>
+                <button @click="viewMode = 'table'" :class="['view-btn', {active: viewMode === 'table'}]">📋 Table</button>
+                <button @click="viewMode = 'board'" :class="['view-btn', {active: viewMode === 'board'}]">📊 Board</button>
             </div>
 
             <!-- Navigation Controls -->
@@ -266,6 +266,148 @@
             </div>
         </main>
 
+        <!-- Table View -->
+        <main v-if="viewMode === 'table'" class="table-view">
+            <table class="notion-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;"></th>
+                        <th>Task</th>
+                        <th style="width: 150px;">Status</th>
+                        <th style="width: 130px;">Category</th>
+                        <th style="width: 130px;">Date</th>
+                        <th style="width: 80px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="task in filteredTasks" :key="task.id" class="table-row" @contextmenu="showTaskMenu($event, task)">
+                        <td>
+                            <input
+                                type="checkbox"
+                                :checked="task.completed"
+                                @change="toggleComplete(task)"
+                                class="task-checkbox"
+                            />
+                        </td>
+                        <td>
+                            <div
+                                class="table-task-title"
+                                contenteditable="true"
+                                @blur="updateTaskText(task, $event)"
+                                @keydown.enter.prevent="$event.target.blur()"
+                            >{{ task.text }}</div>
+                        </td>
+                        <td>
+                            <select v-model="task.status" @change="updateEventStatus(task, task.status)" class="table-select">
+                                <option v-for="status in statusOptions" :key="status.value" :value="status.value">
+                                    {{ status.label }}
+                                </option>
+                            </select>
+                        </td>
+                        <td>
+                            <span v-if="task.category" class="category-badge" :style="{backgroundColor: getTaskColor(task) + '30', color: getTaskColor(task)}">
+                                {{ task.category }}
+                            </span>
+                            <span v-else class="text-muted">—</span>
+                        </td>
+                        <td>
+                            <span class="table-date">{{ task.date }}</span>
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                <button @click="openEventModal(task)" class="action-btn" title="Edit">✏️</button>
+                                <button @click="deleteTask(task)" class="action-btn" title="Delete">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <button class="add-table-btn" @click="openEventModal(null, new Date().toISOString().split('T')[0])">
+                + Add Event
+            </button>
+        </main>
+
+        <!-- Board View (Kanban) -->
+        <main v-if="viewMode === 'board'" class="board-view">
+            <div
+                v-for="status in statusOptions"
+                :key="status.value"
+                class="board-column"
+                @drop="onBoardDrop($event, status.value)"
+                @dragover="onBoardDragOver"
+            >
+                <div class="column-header">
+                    <h3>{{ status.label }}</h3>
+                    <span class="count">{{ tasksByStatus[status.value].length }}</span>
+                </div>
+
+                <div class="column-content">
+                    <div
+                        v-for="task in tasksByStatus[status.value]"
+                        :key="task.id"
+                        class="board-card"
+                        draggable="true"
+                        @dragstart="onBoardDragStart($event, task)"
+                        @dragend="onBoardDragEnd"
+                        @contextmenu="showTaskMenu($event, task)"
+                    >
+                        <div class="card-header">
+                            <input
+                                type="checkbox"
+                                :checked="task.completed"
+                                @change="toggleComplete(task)"
+                                class="task-checkbox"
+                            />
+                            <button @click="deleteTask(task)" class="card-delete">×</button>
+                        </div>
+
+                        <div
+                            class="card-title"
+                            contenteditable="true"
+                            @blur="updateTaskText(task, $event)"
+                            @keydown.enter.prevent="$event.target.blur()"
+                            @click.stop
+                        >{{ task.text }}</div>
+
+                        <div class="card-meta">
+                            <span v-if="task.date" class="card-date">📅 {{ task.date }}</span>
+                            <span v-if="task.category" class="card-category" :style="{backgroundColor: getTaskColor(task) + '30', color: getTaskColor(task)}">
+                                {{ task.category }}
+                            </span>
+                            <span v-if="task.isMilestone" class="milestone-badge">📌</span>
+                        </div>
+
+                        <button @click="openEventModal(task)" class="card-edit-btn">Edit Details</button>
+                    </div>
+
+                    <button class="add-card-btn" @click="addTaskToColumn(status.value)">
+                        + Add task
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Hover Menu (Context Menu) -->
+        <div v-if="showHoverMenu" class="hover-menu" :style="{ left: hoverMenuPosition.x + 'px', top: hoverMenuPosition.y + 'px' }">
+            <button @click="duplicateTask" class="menu-btn">
+                <span>📋</span> Duplicate
+            </button>
+            <button @click="moveTaskToDate" class="menu-btn">
+                <span>📁</span> Move to date
+            </button>
+            <button @click="toggleMilestone" class="menu-btn">
+                <span>📌</span> {{ hoveredTask?.isMilestone ? 'Remove milestone' : 'Mark as milestone' }}
+            </button>
+            <button @click="openEventModal(hoveredTask)" class="menu-btn">
+                <span>✏️</span> Edit details
+            </button>
+            <div class="menu-divider"></div>
+            <button @click="deleteTaskFromMenu" class="menu-btn delete">
+                <span>🗑️</span> Delete
+            </button>
+        </div>
+
         <!-- Enhanced Event Modal -->
         <div class="modal-overlay" :style="{ display: showEventModal ? 'flex' : 'none' }"
             @click.self="showEventModal = false">
@@ -462,6 +604,7 @@
                 </div>
             </div>
         </div>
+        </main>
     </div>
 
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>

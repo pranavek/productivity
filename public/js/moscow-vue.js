@@ -1,6 +1,6 @@
-const { createApp, ref, onMounted, computed } = Vue;
+const { ref, onMounted, computed } = Vue;
 
-createApp({
+Vue.createApp({
     setup() {
         const tasks = ref([]);
         const newTaskText = ref('');

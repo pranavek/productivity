@@ -12,25 +12,23 @@
 </head>
 
 <body>
-    <!-- Global Navigation -->
-    <nav class="app-nav">
-        <div class="nav-dropdown">
-            <select class="nav-select" onchange="if(this.value) window.location.href=this.value;">
-                <option value="index.html">📅 Calendar</option>
-                <option value="eisenhower.html" selected>⚖️ Eisenhower</option>
-                <option value="moscow.html">🎯 MoSCoW</option>
-                <option value="journal.html">✍️ Journal</option>
-            </select>
-        </div>
-    </nav>
-
-    <div class="bg-gradient"></div>
-    <div class="blob"></div>
-
-    <div class="container" id="app" v-cloak>
-        <header>
-            <h1>Eisenhower Matrix</h1>
-            <p class="subtitle">Focus on what's important, not just what's urgent.</p>
+    <div id="app" v-cloak>
+        <main class="notion-main">
+        <header class="page-header">
+            <div class="header-content">
+                <div>
+                    <h1>🎯 Eisenhower Matrix</h1>
+                    <p class="subtitle">Focus on what's important, not just urgent</p>
+                </div>
+                <div class="nav-dropdown">
+                    <select class="page-selector" onchange="if(this.value) window.location.href=this.value">
+                        <option value="/index.html">📅 Calendar</option>
+                        <option value="" selected>🎯 Eisenhower Matrix</option>
+                        <option value="/moscow.html">🏗️ MoSCoW Method</option>
+                        <option value="/journal.html">📝 Journal</option>
+                    </select>
+                </div>
+            </div>
         </header>
 
         <section class="input-section">
@@ -125,6 +123,7 @@
                     </div>
                 </div>
             </div>
+        </main>
         </main>
     </div>
 

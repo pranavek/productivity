@@ -1,6 +1,6 @@
-const { createApp, ref, onMounted, computed, watch } = Vue;
+const { ref, onMounted, computed, watch } = Vue;
 
-createApp({
+Vue.createApp({
     setup() {
         const journals = ref([]);
         const currentJournal = ref({ id: '', content: '' });

@@ -12,25 +12,23 @@
 </head>
 
 <body>
-    <!-- Global Navigation -->
-    <nav class="app-nav">
-        <div class="nav-dropdown">
-            <select class="nav-select" onchange="if(this.value) window.location.href=this.value;">
-                <option value="index.html">📅 Calendar</option>
-                <option value="eisenhower.html">⚖️ Eisenhower</option>
-                <option value="moscow.html">🎯 MoSCoW</option>
-                <option value="journal.html" selected>✍️ Journal</option>
-            </select>
-        </div>
-    </nav>
-
-    <div class="bg-gradient"></div>
-    <div class="blob" style="background: #a855f7; opacity: 0.05;"></div>
-
-    <div class="container" id="app" v-cloak>
-        <header>
-            <h1>Daily Journal</h1>
-            <p class="subtitle">Capture your thoughts, track your growth, and find clarity.</p>
+    <div id="app" v-cloak>
+        <main class="notion-main">
+        <header class="page-header">
+            <div class="header-content">
+                <div>
+                    <h1>📝 Journal</h1>
+                    <p class="subtitle">Capture thoughts and track growth</p>
+                </div>
+                <div class="nav-dropdown">
+                    <select class="page-selector" onchange="if(this.value) window.location.href=this.value">
+                        <option value="/index.html">📅 Calendar</option>
+                        <option value="/eisenhower.html">🎯 Eisenhower Matrix</option>
+                        <option value="/moscow.html">🏗️ MoSCoW Method</option>
+                        <option value="" selected>📝 Journal</option>
+                    </select>
+                </div>
+            </div>
         </header>
 
         <main class="journal-layout">
@@ -70,6 +68,7 @@
                     </p>
                 </div>
             </section>
+        </main>
         </main>
     </div>
 
