@@ -1,4 +1,4 @@
-const { createApp, ref, onMounted, computed } = Vue;
+const { createApp, ref, onMounted, computed, watch } = Vue;
 
 createApp({
     setup() {
@@ -24,6 +24,12 @@ createApp({
         const hoveredTask = ref(null);
         const showHoverMenu = ref(false);
         const hoverMenuPosition = ref({ x: 0, y: 0 });
+
+        // Charts state
+        const chartTimeRange = ref(30); // Default 30 days
+        const burndownChart = ref(null);
+        const burnupChart = ref(null);
+        const velocityChart = ref(null);
 
         // Constants
         const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -254,6 +260,94 @@ createApp({
             });
 
             return summary;
+        });
+
+        // Chart computed properties
+        const chartData = computed(() => {
+            const now = Date.now();
+            const rangeMs = chartTimeRange.value * 24 * 60 * 60 * 1000;
+            const startDate = now - rangeMs;
+
+            // Filter tasks within time range (need to use tasks.value which has all calendar tasks)
+            const tasksInRange = tasks.value.filter(t =>
+                (t.createdAt && t.createdAt >= startDate) || (t.completedAt && t.completedAt >= startDate)
+            );
+
+            // Generate daily data points
+            const days = [];
+            const burndownData = [];
+            const burnupData = [];
+
+            for (let i = chartTimeRange.value; i >= 0; i--) {
+                const date = new Date(now - (i * 24 * 60 * 60 * 1000));
+                const dateMs = date.setHours(0, 0, 0, 0);
+
+                days.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+
+                // Burndown: count tasks NOT completed by this date
+                const remaining = tasksInRange.filter(t =>
+                    t.createdAt && t.createdAt <= dateMs &&
+                    (!t.completedAt || t.completedAt > dateMs)
+                ).length;
+
+                // Burnup: count tasks completed by this date
+                const completed = tasksInRange.filter(t =>
+                    t.completedAt && t.completedAt <= dateMs
+                ).length;
+
+                burndownData.push(remaining);
+                burnupData.push(completed);
+            }
+
+            return { days, burndownData, burnupData };
+        });
+
+        const remainingTasks = computed(() =>
+            tasks.value.filter(t => !t.completed).length
+        );
+
+        const completedTasks = computed(() =>
+            tasks.value.filter(t => t.completed).length
+        );
+
+        const completionRate = computed(() => {
+            const total = tasks.value.length;
+            if (total === 0) return 0;
+            return Math.round((completedTasks.value / total) * 100);
+        });
+
+        const targetCompletionDate = computed(() => {
+            // Calculate based on recent velocity
+            const last7Days = tasks.value.filter(t =>
+                t.completedAt && t.completedAt >= (Date.now() - 7 * 24 * 60 * 60 * 1000)
+            ).length;
+
+            const avgPerDay = last7Days / 7;
+            if (avgPerDay === 0) return 'N/A';
+
+            const daysRemaining = Math.ceil(remainingTasks.value / avgPerDay);
+            const target = new Date(Date.now() + (daysRemaining * 24 * 60 * 60 * 1000));
+            return target.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        });
+
+        const velocityData = computed(() => {
+            const weeks = [];
+            const completions = [];
+
+            for (let i = 4; i >= 0; i--) {
+                const weekEnd = Date.now() - (i * 7 * 24 * 60 * 60 * 1000);
+                const weekStart = weekEnd - (7 * 24 * 60 * 60 * 1000);
+
+                const weekLabel = `Week ${5 - i}`;
+                const count = tasks.value.filter(t =>
+                    t.completedAt && t.completedAt >= weekStart && t.completedAt < weekEnd
+                ).length;
+
+                weeks.push(weekLabel);
+                completions.push(count);
+            }
+
+            return { weeks, completions };
         });
 
         // Utility functions
@@ -632,9 +726,181 @@ createApp({
             }
         };
 
+        // Chart rendering methods
+        const updateCharts = () => {
+            setTimeout(() => {
+                renderBurndownChart();
+                renderBurnupChart();
+                renderVelocityChart();
+            }, 100);
+        };
+
+        const renderBurndownChart = () => {
+            if (burndownChart.value) {
+                burndownChart.value.destroy();
+            }
+
+            const ctx = document.getElementById('burndownChart');
+            if (!ctx) return;
+
+            const { days, burndownData } = chartData.value;
+
+            burndownChart.value = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: days,
+                    datasets: [{
+                        label: 'Remaining Tasks',
+                        data: burndownData,
+                        borderColor: '#EF4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'var(--secondary-bg)',
+                            titleColor: 'var(--text-main)',
+                            bodyColor: 'var(--text-main)',
+                            borderColor: 'var(--border-color)',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: 'var(--text-muted)' },
+                            grid: { color: 'var(--border-color)' }
+                        },
+                        x: {
+                            ticks: { color: 'var(--text-muted)' },
+                            grid: { color: 'var(--border-color)' }
+                        }
+                    }
+                }
+            });
+        };
+
+        const renderBurnupChart = () => {
+            if (burnupChart.value) {
+                burnupChart.value.destroy();
+            }
+
+            const ctx = document.getElementById('burnupChart');
+            if (!ctx) return;
+
+            const { days, burnupData } = chartData.value;
+
+            burnupChart.value = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: days,
+                    datasets: [{
+                        label: 'Completed Tasks',
+                        data: burnupData,
+                        borderColor: '#10B981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'var(--secondary-bg)',
+                            titleColor: 'var(--text-main)',
+                            bodyColor: 'var(--text-main)',
+                            borderColor: 'var(--border-color)',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: 'var(--text-muted)' },
+                            grid: { color: 'var(--border-color)' }
+                        },
+                        x: {
+                            ticks: { color: 'var(--text-muted)' },
+                            grid: { color: 'var(--border-color)' }
+                        }
+                    }
+                }
+            });
+        };
+
+        const renderVelocityChart = () => {
+            if (velocityChart.value) {
+                velocityChart.value.destroy();
+            }
+
+            const ctx = document.getElementById('velocityChart');
+            if (!ctx) return;
+
+            const { weeks, completions } = velocityData.value;
+
+            velocityChart.value = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: weeks,
+                    datasets: [{
+                        label: 'Tasks Completed',
+                        data: completions,
+                        backgroundColor: '#2383E2',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'var(--secondary-bg)',
+                            titleColor: 'var(--text-main)',
+                            bodyColor: 'var(--text-main)',
+                            borderColor: 'var(--border-color)',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: 'var(--text-muted)',
+                                stepSize: 1
+                            },
+                            grid: { color: 'var(--border-color)' }
+                        },
+                        x: {
+                            ticks: { color: 'var(--text-muted)' },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        };
+
         onMounted(() => {
             loadTasks();
             document.addEventListener('click', handleClickOutside);
+        });
+
+        // Watch for view mode changes to render charts
+        watch(viewMode, (newMode) => {
+            if (newMode === 'charts') {
+                updateCharts();
+            }
         });
 
         return {
@@ -656,6 +922,7 @@ createApp({
             hoveredTask,
             showHoverMenu,
             hoverMenuPosition,
+            chartTimeRange,
 
             // Constants
             daysOfWeek,
@@ -672,6 +939,12 @@ createApp({
             calendarSummary,
             periodLabel,
             tasksByStatus,
+            chartData,
+            remainingTasks,
+            completedTasks,
+            completionRate,
+            targetCompletionDate,
+            velocityData,
 
             // Methods
             loadTasks,
@@ -709,7 +982,11 @@ createApp({
             duplicateTask,
             moveTaskToDate,
             toggleMilestone,
-            deleteTaskFromMenu
+            deleteTaskFromMenu,
+            updateCharts,
+            renderBurndownChart,
+            renderBurnupChart,
+            renderVelocityChart
         };
     }
 }).mount('#app');

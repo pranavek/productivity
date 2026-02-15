@@ -52,6 +52,7 @@
                 <button @click="viewMode = 'timeline'" :class="['view-btn', {active: viewMode === 'timeline'}]">Timeline</button>
                 <button @click="viewMode = 'table'" :class="['view-btn', {active: viewMode === 'table'}]">📋 Table</button>
                 <button @click="viewMode = 'board'" :class="['view-btn', {active: viewMode === 'board'}]">📊 Board</button>
+                <button @click="viewMode = 'charts'" :class="['view-btn', {active: viewMode === 'charts'}]">📈 Charts</button>
             </div>
 
             <!-- Navigation Controls -->
@@ -388,6 +389,66 @@
             </div>
         </main>
 
+        <!-- Charts View -->
+        <main v-if="viewMode === 'charts'" class="charts-view">
+            <div class="charts-header">
+                <h2>Progress Charts</h2>
+
+                <div class="date-range-selector">
+                    <label>Time Range:</label>
+                    <select v-model="chartTimeRange" @change="updateCharts">
+                        <option :value="7">Last 7 days</option>
+                        <option :value="14">Last 14 days</option>
+                        <option :value="30">Last 30 days</option>
+                        <option :value="90">Last 90 days</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <!-- Burndown Chart -->
+                <div class="chart-container">
+                    <h3>Burndown Chart</h3>
+                    <p class="chart-description">Remaining tasks over time</p>
+                    <canvas id="burndownChart"></canvas>
+                    <div class="chart-stats">
+                        <div class="stat">
+                            <span class="stat-label">Remaining Tasks:</span>
+                            <span class="stat-value">{{ remainingTasks }}</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Target Date:</span>
+                            <span class="stat-value">{{ targetCompletionDate }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Burnup Chart -->
+                <div class="chart-container">
+                    <h3>Burnup Chart</h3>
+                    <p class="chart-description">Completed tasks over time</p>
+                    <canvas id="burnupChart"></canvas>
+                    <div class="chart-stats">
+                        <div class="stat">
+                            <span class="stat-label">Completed Tasks:</span>
+                            <span class="stat-value">{{ completedTasks }}</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Completion Rate:</span>
+                            <span class="stat-value">{{ completionRate }}%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Velocity Chart -->
+            <div class="chart-container chart-full-width">
+                <h3>Weekly Velocity</h3>
+                <p class="chart-description">Tasks completed per week</p>
+                <canvas id="velocityChart"></canvas>
+            </div>
+        </main>
+
         <!-- Hover Menu (Context Menu) -->
         <div v-if="showHoverMenu" class="hover-menu" :style="{ left: hoverMenuPosition.x + 'px', top: hoverMenuPosition.y + 'px' }">
             <button @click="duplicateTask" class="menu-btn">
@@ -609,6 +670,7 @@
 
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="js/api-client.min.js"></script>
     <script src="js/calendar-vue.min.js"></script>
 </body>

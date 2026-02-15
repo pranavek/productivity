@@ -67,10 +67,12 @@ const db = new sqlite3.Database(dbPath, (err) => {
 
 app.post('/api/tasks/add', (req, res) => {
     const {text, type, completed, createdAt, priority, quadrant, date, status, is_milestone, category, color, description} = req.body;
+    const updatedAt = createdAt || Date.now();
+    const completedAt = completed ? updatedAt : null;
 
     db.run(
-        'INSERT INTO tasks (text, type, completed, created_at, priority, quadrant, date, status, is_milestone, category, color, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [text, type, completed ? 1 : 0, createdAt, priority, quadrant, date, status || 'todo', is_milestone ? 1 : 0, category, color, description || ''],
+        'INSERT INTO tasks (text, type, completed, created_at, completed_at, updated_at, priority, quadrant, date, status, is_milestone, category, color, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [text, type, completed ? 1 : 0, createdAt, completedAt, updatedAt, priority, quadrant, date, status || 'todo', is_milestone ? 1 : 0, category, color, description || ''],
         function(err) {
             if (err) return res.status(500).json({error: err.message});
             res.status(201).json({id: this.lastID});
@@ -95,6 +97,8 @@ app.get('/api/tasks/all', (req, res) => {
             type: row.type,
             completed: Boolean(row.completed),
             createdAt: row.created_at,
+            completedAt: row.completed_at,
+            updatedAt: row.updated_at,
             priority: row.priority,
             quadrant: row.quadrant,
             date: row.date,
@@ -111,11 +115,27 @@ app.get('/api/tasks/all', (req, res) => {
 
 app.put('/api/tasks/update', (req, res) => {
     const {id} = req.query;
-    const {text, completed, priority, quadrant, date, status, is_milestone, category, color, description} = req.body;
+    const {text, completed, priority, quadrant, date, status, is_milestone, category, color, description, completedAt} = req.body;
+
+    // Always update the updated_at timestamp
+    const updatedAt = Date.now();
+
+    // Handle completed_at logic
+    let newCompletedAt = completedAt;
+
+    // If task is being marked complete and doesn't have completedAt, set it now
+    if (completed && !completedAt) {
+        newCompletedAt = updatedAt;
+    }
+
+    // If task is being unmarked, clear completedAt
+    if (!completed) {
+        newCompletedAt = null;
+    }
 
     db.run(
-        'UPDATE tasks SET text = ?, completed = ?, priority = ?, quadrant = ?, date = ?, status = ?, is_milestone = ?, category = ?, color = ?, description = ? WHERE id = ?',
-        [text, completed ? 1 : 0, priority, quadrant, date, status, is_milestone ? 1 : 0, category, color, description, id],
+        'UPDATE tasks SET text = ?, completed = ?, priority = ?, quadrant = ?, date = ?, status = ?, is_milestone = ?, category = ?, color = ?, description = ?, completed_at = ?, updated_at = ? WHERE id = ?',
+        [text, completed ? 1 : 0, priority, quadrant, date, status, is_milestone ? 1 : 0, category, color, description, newCompletedAt, updatedAt, id],
         (err) => {
             if (err) return res.status(500).json({error: err.message});
             res.json({success: true});
