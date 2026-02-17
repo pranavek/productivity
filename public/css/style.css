@@ -2320,3 +2320,357 @@ button.secondary-btn:hover {
         padding: 1rem;
     }
 }
+
+/* =============================================================================
+   WSJF PRIORITIZER
+   ============================================================================= */
+
+.wsjf-summary-bar {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    padding: 1rem 1.25rem;
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.wsjf-summary-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.wsjf-summary-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #555;
+}
+
+.wsjf-summary-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.wsjf-summary-top {
+    flex: 1;
+    min-width: 0;
+}
+
+.wsjf-summary-top-text {
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #2383E2;
+}
+
+.wsjf-summary-actions {
+    margin-left: auto;
+}
+
+.wsjf-table-container {
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.wsjf-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.wsjf-table th {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid #2a2a2a;
+    background: #141414;
+    color: #555;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+.wsjf-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #1e1e1e;
+    vertical-align: middle;
+}
+
+.wsjf-table tr:last-child td {
+    border-bottom: none;
+}
+
+.wsjf-row:hover td {
+    background: #1a1a1a;
+}
+
+.wsjf-rank {
+    width: 32px;
+    color: #444;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.wsjf-col-score {
+    width: 56px;
+    text-align: center;
+}
+
+.wsjf-col-actions {
+    width: 88px;
+    text-align: right;
+}
+
+.wsjf-item-cell {
+    min-width: 0;
+}
+
+.wsjf-item-text {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #e0e0e0;
+}
+
+.wsjf-item-desc {
+    display: block;
+    font-size: 12px;
+    color: #555;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 300px;
+}
+
+.wsjf-item-done {
+    text-decoration: line-through;
+    color: #444;
+}
+
+.wsjf-score-num {
+    font-size: 13px;
+    color: #666;
+    font-variant-numeric: tabular-nums;
+}
+
+.wsjf-score {
+    display: inline-block;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+}
+
+.wsjf-score-high {
+    background: rgba(39, 174, 96, 0.12);
+    color: #27AE60;
+}
+
+.wsjf-score-medium {
+    background: rgba(242, 153, 74, 0.12);
+    color: #F2994A;
+}
+
+.wsjf-score-low {
+    background: rgba(235, 87, 87, 0.12);
+    color: #EB5757;
+}
+
+.wsjf-score-na {
+    color: #333;
+    font-size: 13px;
+}
+
+.wsjf-score-dimmed {
+    font-size: 13px;
+    color: #333;
+    font-variant-numeric: tabular-nums;
+}
+
+.wsjf-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.wsjf-row:hover .wsjf-actions {
+    opacity: 1;
+}
+
+.wsjf-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border: none;
+    background: transparent;
+    color: #555;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.wsjf-action-btn:hover {
+    background: #2a2a2a;
+    color: #ccc;
+}
+
+.wsjf-action-complete:hover {
+    background: rgba(39, 174, 96, 0.12);
+    color: #27AE60;
+}
+
+.wsjf-action-delete:hover {
+    background: rgba(235, 87, 87, 0.12);
+    color: #EB5757;
+}
+
+.wsjf-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #444;
+    font-size: 14px;
+}
+
+.wsjf-completed-section {
+    margin-top: 1rem;
+}
+
+.wsjf-completed-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: #555;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 6px 0;
+    margin-bottom: 8px;
+    transition: color 0.15s;
+}
+
+.wsjf-completed-toggle svg {
+    transition: transform 0.2s;
+}
+
+.wsjf-completed-toggle:hover {
+    color: #888;
+}
+
+.wsjf-row-completed td {
+    opacity: 0.5;
+}
+
+/* Score inputs in modal */
+.score-inputs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.score-hint {
+    display: block;
+    font-size: 11px;
+    font-weight: 400;
+    color: #555;
+    margin-top: 1px;
+}
+
+.score-input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.score-range {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    background: #2a2a2a;
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+}
+
+.score-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #2383E2;
+    cursor: pointer;
+}
+
+.score-range::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #2383E2;
+    cursor: pointer;
+    border: none;
+}
+
+.score-display {
+    width: 24px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: #e0e0e0;
+    font-variant-numeric: tabular-nums;
+}
+
+.formula-preview {
+    background: #141414;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #666;
+    font-family: 'Inter', monospace;
+    margin-top: 4px;
+}
+
+.formula-preview strong {
+    color: #e0e0e0;
+    font-weight: 700;
+}
+
+@media (max-width: 768px) {
+    .wsjf-summary-bar {
+        gap: 1rem;
+    }
+
+    .score-inputs-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .wsjf-col-score {
+        display: none;
+    }
+
+    .wsjf-col-score:last-of-type {
+        display: table-cell;
+    }
+}

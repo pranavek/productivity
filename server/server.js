@@ -66,13 +66,15 @@ const db = new sqlite3.Database(dbPath, (err) => {
 // TASK ENDPOINTS
 
 app.post('/api/tasks/add', (req, res) => {
-    const {text, type, completed, createdAt, priority, quadrant, date, status, is_milestone, category, color, description} = req.body;
+    const {text, type, completed, createdAt, priority, quadrant, date, status, is_milestone, category, color, description,
+           wsjfValue, wsjfTimeCriticality, wsjfRiskReduction, wsjfJobSize} = req.body;
     const updatedAt = createdAt || Date.now();
     const completedAt = completed ? updatedAt : null;
 
     db.run(
-        'INSERT INTO tasks (text, type, completed, created_at, completed_at, updated_at, priority, quadrant, date, status, is_milestone, category, color, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [text, type, completed ? 1 : 0, createdAt, completedAt, updatedAt, priority, quadrant, date, status || 'todo', is_milestone ? 1 : 0, category, color, description || ''],
+        'INSERT INTO tasks (text, type, completed, created_at, completed_at, updated_at, priority, quadrant, date, status, is_milestone, category, color, description, wsjf_value, wsjf_time_criticality, wsjf_risk_reduction, wsjf_job_size) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [text, type, completed ? 1 : 0, createdAt, completedAt, updatedAt, priority, quadrant, date, status || 'todo', is_milestone ? 1 : 0, category, color, description || '',
+         wsjfValue || null, wsjfTimeCriticality || null, wsjfRiskReduction || null, wsjfJobSize || null],
         function(err) {
             if (err) return res.status(500).json({error: err.message});
             res.status(201).json({id: this.lastID});
@@ -106,7 +108,11 @@ app.get('/api/tasks/all', (req, res) => {
             isMilestone: Boolean(row.is_milestone),
             category: row.category,
             color: row.color,
-            description: row.description || ''
+            description: row.description || '',
+            wsjfValue: row.wsjf_value,
+            wsjfTimeCriticality: row.wsjf_time_criticality,
+            wsjfRiskReduction: row.wsjf_risk_reduction,
+            wsjfJobSize: row.wsjf_job_size
         }));
 
         res.json(tasks);
@@ -115,7 +121,8 @@ app.get('/api/tasks/all', (req, res) => {
 
 app.put('/api/tasks/update', (req, res) => {
     const {id} = req.query;
-    const {text, completed, priority, quadrant, date, status, is_milestone, category, color, description, completedAt} = req.body;
+    const {text, completed, priority, quadrant, date, status, is_milestone, category, color, description, completedAt,
+           wsjfValue, wsjfTimeCriticality, wsjfRiskReduction, wsjfJobSize} = req.body;
 
     // Always update the updated_at timestamp
     const updatedAt = Date.now();
@@ -134,8 +141,9 @@ app.put('/api/tasks/update', (req, res) => {
     }
 
     db.run(
-        'UPDATE tasks SET text = ?, completed = ?, priority = ?, quadrant = ?, date = ?, status = ?, is_milestone = ?, category = ?, color = ?, description = ?, completed_at = ?, updated_at = ? WHERE id = ?',
-        [text, completed ? 1 : 0, priority, quadrant, date, status, is_milestone ? 1 : 0, category, color, description, newCompletedAt, updatedAt, id],
+        'UPDATE tasks SET text = ?, completed = ?, priority = ?, quadrant = ?, date = ?, status = ?, is_milestone = ?, category = ?, color = ?, description = ?, completed_at = ?, updated_at = ?, wsjf_value = ?, wsjf_time_criticality = ?, wsjf_risk_reduction = ?, wsjf_job_size = ? WHERE id = ?',
+        [text, completed ? 1 : 0, priority, quadrant, date, status, is_milestone ? 1 : 0, category, color, description, newCompletedAt, updatedAt,
+         wsjfValue || null, wsjfTimeCriticality || null, wsjfRiskReduction || null, wsjfJobSize || null, id],
         (err) => {
             if (err) return res.status(500).json({error: err.message});
             res.json({success: true});

@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     text TEXT NOT NULL,
     completed INTEGER NOT NULL DEFAULT 0,
-    type TEXT NOT NULL CHECK(type IN ('moscow', 'eisenhower', 'calendar')),
+    type TEXT NOT NULL CHECK(type IN ('moscow', 'eisenhower', 'calendar', 'wsjf')),
     created_at INTEGER NOT NULL,
     priority TEXT CHECK(priority IS NULL OR priority IN ('must', 'should', 'could', 'wont')),
     quadrant TEXT CHECK(quadrant IS NULL OR quadrant IN ('q1', 'q2', 'q3', 'q4')),
@@ -11,7 +11,11 @@ CREATE TABLE IF NOT EXISTS tasks (
     is_milestone INTEGER DEFAULT 0,
     category TEXT CHECK(category IS NULL OR category IN ('work', 'personal', 'health', 'finance', 'social')),
     color TEXT,
-    description TEXT DEFAULT ''
+    description TEXT DEFAULT '',
+    wsjf_value INTEGER DEFAULT NULL,
+    wsjf_time_criticality INTEGER DEFAULT NULL,
+    wsjf_risk_reduction INTEGER DEFAULT NULL,
+    wsjf_job_size INTEGER DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS journals (
